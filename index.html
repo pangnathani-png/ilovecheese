@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER: INFINITY PROTOCOL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050508;
+            --ui-bg: rgba(10, 10, 15, 0.85);
+            --ui-text: #ffffff;
+            --theme-color: #38bdf8;
+            --void-color: #a855f7;
+        }
+        body { 
+            margin: 0; overflow: hidden; background: var(--bg); 
+            font-family: 'Outfit', sans-serif; color: white; 
+            user-select: none; touch-action: none;
+            transition: background-color 2s ease;
+        }
+        canvas { display: block; cursor: crosshair; }
+
+        /* Progress Bar */
+        #ascend-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.05); z-index: 100; }
+        #ascend-progress { height: 100%; width: 0%; background: var(--theme-color); box-shadow: 0 0 25px var(--theme-color); transition: width 0.5s ease, background-color 1s ease; }
+
+        /* Central Display */
+        #main-display { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; width: 100%; }
+        #aether-count { font-size: 6rem; font-weight: 900; letter-spacing: -0.05em; line-height: 1; text-shadow: 0 0 40px rgba(255, 255, 255, 0.2); transition: transform 0.1s; }
+        .stats-sub { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.8; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        
+        /* Combo Meter */
+        #combo-container { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; opacity: 0; transition: opacity 0.3s; }
+        #combo-text { font-size: 2rem; font-weight: 900; color: #facc15; text-shadow: 0 0 20px #facc15; font-style: italic; }
+        #combo-bar { width: 150px; height: 4px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; overflow: hidden; }
+        #combo-fill { height: 100%; width: 100%; background: #facc15; transform-origin: left; }
+
+        /* Overdrive Vignette */
+        #overdrive-vignette { position: fixed; inset: 0; box-shadow: inset 0 0 150px rgba(244, 63, 94, 0); pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
+        .overdrive-active { box-shadow: inset 0 0 250px rgba(244, 63, 94, 0.8) !important; animation: pulse-red 1s infinite alternate; }
+        @keyframes pulse-red { 0% { box-shadow: inset 0 0 150px rgba(244, 63, 94, 0.5); } 100% { box-shadow: inset 0 0 300px rgba(244, 63, 94, 0.9); } }
+
+        /* Command Drawer */
+        #command-drawer {
+            position: fixed; right: 0; top: 0; height: 100vh; width: 480px; 
+            background: var(--ui-bg); backdrop-filter: blur(25px); border-left: 1px solid rgba(255,255,255,0.05);
+            color: var(--ui-text);
+            transform: translateX(100%); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); z-index: 50;
+            display: flex; flex-direction: column; box-shadow: -20px 0 80px rgba(0,0,0,0.9);
+        }
+        #command-drawer.open { transform: translateX(0); }
+        #drawer-trigger {
+            position: absolute; left: -45px; top: 50%; transform: translateY(-50%); width: 45px; height: 200px;
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+            border-radius: 15px 0 0 15px; cursor: pointer; writing-mode: vertical-rl; text-orientation: mixed;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.4em; text-transform: uppercase; transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1); border-right: none;
+        }
+        #drawer-trigger:hover { left: -50px; background: rgba(255,255,255,0.1); }
+
+        /* Cards & Buttons */
+        .expandable-card { max-height: 65px; overflow: hidden; transition: all 0.4s; border-left: 4px solid transparent; background: rgba(255,255,255,0.03); margin-bottom: 0.75rem; border-radius: 1rem; }
+        .expandable-card.active { max-height: 400px; background: rgba(255,255,255,0.08); border-left-color: var(--theme-color); }
+        .expandable-card.hidden { display: none !important; }
+
+        .btn-black { background: #ffffff; color: #000000; transition: all 0.2s; }
+        .btn-black:hover:not(:disabled) { background: var(--theme-color); color: #fff; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.3), 0 0 15px var(--theme-color); }
+        .btn-black:disabled { opacity: 0.15; cursor: not-allowed; }
+
+        .tab-btn { opacity: 0.3; transition: all 0.3s; border-bottom: 2px solid transparent; padding-bottom: 5px; font-size: 9px; cursor: pointer; }
+        .tab-btn.active { opacity: 1; font-weight: 700; border-bottom-color: white; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .tab-btn.hidden { display: none !important; }
+
+        /* Dr. Vertex */
+        #vertex-guide {
+            position: fixed; bottom: 30px; left: 30px; width: 340px; background: rgba(15, 15, 25, 0.95);
+            backdrop-filter: blur(10px); border: 1px solid var(--theme-color); border-radius: 1rem; padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(56, 189, 248, 0.2); z-index: 200;
+            transform: translateY(150%); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; gap: 15px;
+        }
+        #vertex-guide.visible { transform: translateY(0); }
+        .vertex-avatar { width: 40px; height: 40px; border: 2px solid var(--theme-color); transform: rotate(45deg); animation: spinAvatar 10s linear infinite; position: relative; }
+        .vertex-avatar::after { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 1px solid white; animation: spinAvatarReverse 5s linear infinite; }
+        @keyframes spinAvatar { 100% { transform: rotate(405deg); } }
+        @keyframes spinAvatarReverse { 100% { transform: rotate(-360deg); } }
+
+        /* Floating Text */
+        .click-text { position: absolute; pointer-events: none; font-weight: 900; animation: floatLabel 1s cubic-bezier(0.2, 0.6, 0.3, 1) forwards; z-index: 100; text-shadow: 0 0 10px currentColor; }
+        .crit-text { font-size: 32px; color: #facc15 !important; text-shadow: 0 0 20px #facc15; animation: critFloat 1s forwards; }
+        @keyframes floatLabel { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -200px) scale(1); opacity: 0; } }
+        @keyframes critFloat { 0% { transform: translate(-50%, -50%) scale(0.5) rotate(-5deg); opacity: 1; } 100% { transform: translate(-50%, -250px) scale(1.2) rotate(5deg); opacity: 0; } }
+
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 300; display: flex; align-items: center; justify-content: center; }
+        
+        /* Roadmap */
+        .roadmap-node { display: flex; align-items: center; gap: 15px; position: relative; padding-left: 20px; margin-bottom: 25px; }
+        .roadmap-line { position: absolute; left: 25px; top: 25px; bottom: -25px; width: 2px; background: rgba(255,255,255,0.1); }
+        .roadmap-dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); z-index: 2; transition: all 0.5s ease; }
+        .roadmap-node.unlocked .roadmap-dot { background: var(--theme-color); box-shadow: 0 0 15px var(--theme-color); }
+        .roadmap-node.active .roadmap-dot { background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px var(--theme-color); transform: scale(1.5); animation: pulse-dot 2s infinite; }
+        @keyframes pulse-dot { 0% { transform: scale(1.2); } 50% { transform: scale(1.8); } 100% { transform: scale(1.2); } }
+    </style>
+</head>
+<body>
+
+    <div id="ascend-container"><div id="ascend-progress"></div></div>
+    <div id="overdrive-vignette"></div>
+
+    <!-- Main Display -->
+    <div id="main-display">
+        <div id="aether-count">0</div>
+        <div class="stats-sub">
+            <div id="dim-label" style="color: var(--theme-color);">Loading...</div>
+            <div>Yield <span id="aether-rate" class="text-white">0</span>/s</div>
+            <div>Pop <span id="pop-count" class="text-white">0</span></div>
+            <div class="opacity-50">Mult <span id="mult-count" class="text-white">1.0x</span></div>
+            <div class="opacity-50">VM <span id="vm-count" class="text-[var(--void-color)]">0</span></div>
+        </div>
+    </div>
+
+    <!-- Combo Meter -->
+    <div id="combo-container">
+        <div id="combo-text">x1.00</div>
+        <div id="combo-bar"><div id="combo-fill"></div></div>
+    </div>
+
+    <!-- Dr. Vertex -->
+    <div id="vertex-guide">
+        <div class="vertex-avatar"></div>
+        <div class="flex-1">
+            <div class="text-[10px] font-bold text-sky-400 tracking-widest uppercase mb-1">Dr. Vertex</div>
+            <div id="vertex-text" class="text-[11px] leading-relaxed opacity-90 mb-3">Initializing...</div>
+            <button onclick="window.dismissVertex()" class="text-[9px] font-bold uppercase tracking-widest opacity-50 hover:opacity-100">Dismiss [X]</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay">
+        <!-- Loader / Tutorial -->
+        <div id="tutorial-modal" class="max-w-xl bg-white/5 border border-white/10 text-white p-14 rounded-[3rem] shadow-2xl text-center hidden">
+            <h2 class="text-5xl font-bold mb-6 tracking-tighter uppercase italic">Infinity Protocol</h2>
+            <p class="text-base leading-relaxed opacity-70 mb-12">
+                Cloud Sync Established.<br><br>
+                <span class="font-bold text-sky-400">Fracture</span> the geometry.<br>
+                <span class="font-bold text-purple-400">Automate</span> your yield.<br>
+                <span class="font-bold text-fuchsia-400">Extract</span> the Void Matter.
+            </p>
+            <button onclick="window.startGame()" class="btn-black w-full py-6 rounded-2xl font-bold tracking-[0.4em] text-[12px]">COMMENCE EXTRACTION</button>
+        </div>
+
+        <!-- Offline Progress -->
+        <div id="offline-modal" class="max-w-md bg-white/5 border border-sky-400/50 text-white p-10 rounded-[2rem] shadow-[0_0_50px_rgba(56,189,248,0.2)] text-center hidden">
+            <div class="w-12 h-12 border-4 border-sky-400 rounded-full mx-auto mb-6 flex items-center justify-center animate-spin"><div class="w-2 h-2 bg-sky-400 rounded-full"></div></div>
+            <h2 class="text-2xl font-bold mb-2 tracking-widest uppercase">Temporal Shift Detected</h2>
+            <p class="text-sm opacity-70 mb-8">While you were outside the simulation, your automated entities continued extraction for <span id="offline-time" class="text-sky-400 font-bold">0</span>.</p>
+            <div class="text-4xl font-bold text-sky-400 mb-8">+<span id="offline-gained">0</span> Aether</div>
+            <button onclick="window.claimOffline()" class="btn-black w-full py-4 rounded-xl font-bold tracking-[0.3em] text-[10px]">INTEGRATE YIELD</button>
+        </div>
+    </div>
+
+    <!-- Command Drawer -->
+    <div id="command-drawer">
+        <div id="drawer-trigger" onclick="window.toggleDrawer()">Command Center</div>
+
+        <div class="flex justify-around py-8 px-4 flex-shrink-0 border-b border-white/5">
+            <div onclick="window.setTab('seekers')" id="tab-seekers" class="tab-btn active font-bold uppercase tracking-widest">Seekers</div>
+            <div onclick="window.setTab('research')" id="tab-research" class="tab-btn font-bold uppercase tracking-widest hidden">Upgrades</div>
+            <div onclick="window.setTab('rituals')" id="tab-rituals" class="tab-btn font-bold uppercase tracking-widest text-rose-400 hidden">Rituals</div>
+            <div onclick="window.setTab('void')" id="tab-void" class="tab-btn font-bold uppercase tracking-widest text-fuchsia-400 hidden">Void Matrix</div>
+            <div onclick="window.setTab('roadmap')" id="tab-roadmap" class="tab-btn font-bold uppercase tracking-widest">Roadmap</div>
+        </div>
+
+        <div id="content-area" class="flex-1 overflow-y-auto p-6 space-y-3 scroll-hide">
+            <div id="panel-seekers" class="space-y-3"></div>
+            <div id="panel-research" class="hidden space-y-3"></div>
+            <div id="panel-rituals" class="hidden space-y-3"></div>
+            <div id="panel-void" class="hidden space-y-3">
+                <div class="text-center mb-6">
+                    <p class="text-[10px] uppercase tracking-widest opacity-50">Available Void Matter</p>
+                    <p class="text-4xl font-bold text-fuchsia-400" id="void-display">0</p>
+                </div>
+                <div id="void-skills-container"></div>
+            </div>
+            <div id="panel-roadmap" class="hidden">
+                <div class="text-[11px] font-bold opacity-30 tracking-widest uppercase mb-8 text-center">Ascension Roadmap</div>
+                <div id="roadmap-container" class="relative pl-6 pb-10"></div>
+            </div>
+        </div>
+
+        <div class="p-8 border-t border-white/5 flex-shrink-0 bg-black/50">
+            <div class="flex justify-between items-center mb-3 px-2 text-[10px] font-bold uppercase tracking-widest opacity-50">
+                <span>Goal</span>
+                <span id="ascend-goal-text">1.0M</span>
+            </div>
+            <button id="btn-ascend" disabled onclick="window.ascend()" class="w-full py-6 rounded-2xl bg-white/5 border border-white/10 text-white text-[12px] font-bold uppercase tracking-[0.4em] transition-all disabled:opacity-20 hover:bg-white hover:text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.8)]">
+                Ascend Geometry
+            </button>
+            <div id="ascend-reward-preview" class="text-center text-[9px] text-fuchsia-400 font-bold mt-3 opacity-0 transition-opacity">Grants +0 Void Matter</div>
+        </div>
+    </div>
+
+    <!-- Core Script -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // 1. UTILS & HELPERS
+        const setTxt = (id, text) => { 
+            const el = document.getElementById(id); 
+            if (el) el.innerText = text; 
+        };
+        
+        function fNum(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            const suffixes = ["", "k", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+            const suffixNum = Math.floor(("" + Math.floor(num)).length / 3);
+            if (suffixNum >= suffixes.length) return num.toExponential(2);
+            let shortValue = parseFloat((suffixNum !== 0 ? (num / Math.pow(1000, suffixNum)) : num).toPrecision(3));
+            if (shortValue % 1 !== 0) shortValue = shortValue.toFixed(1);
+            return shortValue + suffixes[suffixNum];
+        }
+
+        const getShapeSVG = (type, color) => {
+            const c = '#' + color.toString(16).padStart(6, '0');
+            if (type === 'sphere') return `<svg viewBox="0 0 24 24" fill="${c}"><circle cx="12" cy="12" r="10"/></svg>`;
+            if (type === 'octahedron') return `<svg viewBox="0 0 24 24" fill="${c}"><polygon points="12,2 22,12 12,22 2,12"/></svg>`;
+            if (type === 'torus') return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="4"><circle cx="12" cy="12" r="8"/></svg>`;
+            if (type === 'icosahedron') return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><polygon points="12,2 22,7 22,17 12,22 2,17 2,7"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="7" x2="22" y2="17"/><line x1="2" y1="17" x2="22" y2="7"/></svg>`;
+            if (type === 'torusKnot') return `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M8,8 C12,2 22,8 16,16 C10,24 2,14 8,8 Z" /></svg>`;
+            return `<svg viewBox="0 0 24 24" fill="${c}"><circle cx="12" cy="12" r="10"/></svg>`;
+        };
+
+        let audioCtx;
+        function initAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playTone(freq, type, duration, vol) {
+            if(!audioCtx || audioCtx.state !== 'running') return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+        function playClick() { playTone(800 + Math.random()*200, 'sine', 0.1, 0.05); }
+        function playCrit() { playTone(150, 'sawtooth', 0.4, 0.1); playTone(200, 'square', 0.4, 0.05); }
+        function playAscend() { [261.63, 329.63, 392.00, 523.25].forEach((f, i) => { setTimeout(() => playTone(f, 'sine', 4.0, 0.1), i * 300); }); }
+
+        // 2. DATA GENERATION
+        const structureNames = [
+            "Penrose Triangle", "Necker Cube", "Möbius Strip", "Klein Bottle", "Borromean Rings",
+            "Hopf Link", "Trefoil Knot", "Boy's Surface", "Roman Surface", "Tesseract",
+            "Calabi-Yau Manifold", "Sierpinski Gasket", "Menger Sponge", "Koch Snowflake", "Gömböc",
+            "Oloid", "Costa's Minimal Surface", "Alexander's Horned Sphere", "Dragon Curve", "Peano Curve",
+            "Hilbert Curve", "Penrose Tiling", "Gabriel's Horn", "Koch Curve", "Mandelbrot Set",
+            "Julia Set", "Lorenz Attractor", "Roessler Attractor", "Apollonian Gasket", "Hexaflexagon",
+            "Enneper Surface", "Helicoid", "Catenoid", "Steiner Surface", "Cross-cap", "Torus",
+            "Solid Torus", "Horn Torus", "Spindle Torus", "Clifford Torus", "Projective Plane", "Real Projective Plane"
+        ];
+        const dimPrefixes = ["Null", "Fractal", "Hyperbolic", "Obsidian", "Quantum"];
+        const dimSuffixes = ["Prism", "Echo", "Void", "Matrix", "Core"];
+        for(let i=42; i<100; i++) structureNames.push(`${dimPrefixes[i%5]} ${dimSuffixes[i%5]} Phase ${i-41}`);
+
+        const dimensions = structureNames.map((name, i) => {
+            const hue = (i * 25) % 360; 
+            const color = new THREE.Color(`hsl(${hue}, 80%, 65%)`).getHex();
+            const goal = i === 0 ? 1000000 : 50000000 * Math.pow(2.5, i - 1);
+            const s = 1.5; let geo; const t = i % 6;
+            if (t === 0) geo = new THREE.IcosahedronGeometry(s, (i%3)+1);
+            else if (t === 1) geo = new THREE.TorusKnotGeometry(s*0.8, s*0.2, 64+i, 8+(i%4)*2, (i%5)+2, (i%7)+3);
+            else if (t === 2) geo = new THREE.OctahedronGeometry(s*1.2, (i%4)+1);
+            else if (t === 3) geo = new THREE.DodecahedronGeometry(s, Math.min(Math.floor(i/2), 3));
+            else if (t === 4) geo = new THREE.TorusGeometry(s*0.9, s*0.4, 16+i, 50+(i*2));
+            else geo = new THREE.CylinderGeometry(s*0.8, s*0.8, s*1.5, 3+(i%4), 1, true);
+            return { name, color, goal, geo, hue };
+        });
+
+        // HYBRID PACING FORMULA: Custom hand-coded early game, exponential late game
+        const baseSeekerCosts = [15, 2500, 150000, 10000000, 850000000];
+        const baseSeekerYields = [1, 25, 800, 45000, 3000000];
+        
+        const seekersData = {};
+        const skPre = ["Drift", "Pulse", "Void", "Prism", "Arch", "Null", "Flux", "Chrono", "Aether", "Quantum"];
+        const skSuf = ["er", "ar", "walker", "core", "itect", "drone", "weaver", "smith", "forge", "engine"];
+        for(let i=0; i<100; i++) {
+            const cost = i < 5 ? baseSeekerCosts[i] : baseSeekerCosts[4] * Math.pow(60, i - 4);
+            const yieldAmt = i < 5 ? baseSeekerYields[i] : baseSeekerYields[4] * Math.pow(45, i - 4);
+            seekersData[`seeker_${i}`] = {
+                name: i === 0 ? "Drifter" : `${skPre[i%skPre.length]}${skSuf[(i*3)%skSuf.length]}`,
+                count: 0, cost: cost, yield: yieldAmt, color: dimensions[i%dimensions.length].color,
+                size: 0.05 + (i * 0.001), geometry: ['sphere', 'octahedron', 'torus', 'icosahedron', 'torusKnot'][i%5],
+                unlockReq: i === 0 ? 0 : Math.floor(cost * 0.4), // PERFECT PACING: Unlocks exactly when you have 40% of its cost
+                lore: `Extracts Aether using proportional angle pairs of magnitude level ${i}.`,
+                mechanic: `+${fNum(yieldAmt)} Base Yield/sec`
+            };
+        }
+
+        const baseResCosts = [50, 5000, 25000, 500000, 15000000];
+        const researchData = {};
+        const resTypes = ['click', 'crit', 'passive', 'auto', 'speed'];
+        for(let i=0; i<100; i++) {
+            const type = resTypes[i % resTypes.length];
+            const cost = i < 5 ? baseResCosts[i] : baseResCosts[4] * Math.pow(40, i - 4);
+            let mechanicText = "";
+            if (type === 'click') mechanicText = "Doubles base click power per level.";
+            else if (type === 'crit') mechanicText = "+5% Crit Chance per level.";
+            else if (type === 'passive') mechanicText = "+50 (x2 per level) Base Yield/sec.";
+            else if (type === 'auto') mechanicText = "Auto-clicks 2x/sec per level.";
+            else mechanicText = "+20% Seeker Speed per level.";
+
+            researchData[`res_${i}`] = {
+                type: type, name: `${['Fracture', 'Probability', 'Harmonic', 'Mechanical', 'Kinetic'][i%5]} Protocol ${Math.floor(i/5)+1}`,
+                lv: 0, cost: cost, unlockReq: i === 0 ? 0 : Math.floor(cost * 0.4),
+                lore: `Redefines parallel lines within the structure to optimize ${type} channels.`,
+                mechanic: mechanicText
+            };
+        }
+
+        const ritualData = {};
+        const ritTypes = ['surge', 'cascade'];
+        for(let i=0; i<100; i++) {
+            const type = ritTypes[i % ritTypes.length];
+            const unlockDimReq = 1 + Math.floor(i/2); // Rituals unlock at Dim 1 (2nd Dimension) and above
+            ritualData[`rit_${i}`] = {
+                type: type, name: `${['Chrono', 'Resonance'][i%2]} Rite ${Math.floor(i/2)+1}`,
+                cooldown: type === 'surge' ? 60 + (i*10) : 120 + (i*5), lastUsed: 0, duration: type === 'cascade' ? 20 + i : null,
+                power: type === 'surge' ? 60 * (i+1) : 5 + i, unlockDim: unlockDimReq,
+                lore: `Bends transversal lines to manipulate spacetime metrics.`,
+                mechanic: type === 'surge' ? `Instantly grants ${60*(i+1)}s of yield. (CD: ${60+(i*10)}s)` : `Multiplies all yields by ${5+i}x for ${20+i}s. (CD: ${120+(i*5)}s)`
+            };
+        }
+
+        const artifactData = {};
+        for(let i=0; i<100; i++) {
+            artifactData[`art_${i}`] = {
+                name: `Relic of Dimension ${i+1}`, owned: false, unlockDim: i, mult: 1.5 + (i * 0.1),
+                lore: `A geometric constant proving the theorems of Dimension ${i+1}.`, mechanic: `Permanently multiplies ALL prestige generation by ${1.5 + (i*0.1)}x.`
+            };
+        }
+
+        // 3. CORE STATE & VARIABLES
+        const state = {
+            aether: 0, totalAether: 0, lifetimeAether: 0, voidMatter: 0, dimIndex: 0, lastSaveTime: Date.now(),
+            combo: 1.0, lastClickTime: 0, overdriveUntil: 0,
+            prestige: 1, clickPower: 1, critChance: 0, passiveGen: 0, artifactMult: 1,
+            metaSkills: {
+                clickPow: { lv: 0, cost: 1, name: "Kinetic Resonance", desc: "+100% Base Click Power per level." },
+                passPow: { lv: 0, cost: 2, name: "Void Automation", desc: "+100% Passive Yield per level." },
+                synergy: { lv: 0, cost: 5, name: "Geometric Synergy", desc: "Drifters boost all other seekers by 0.5% per Drifter per level." }
+            },
+            seekers: seekersData, research: researchData, rituals: ritualData, artifacts: artifactData,
+            dialoguesShown: []
+        };
+
+        window.activeSeekerMeshes = [];
+        window.clickAnimations = [];
+        let anomaly = null;
+        let isMenuOpen = false;
+        window.monolithPhysics = { scale: 1, velocity: 0, target: 1, tension: 0.2, friction: 0.85 };
+
+        // 4. VERTEX DIALOGUES
+        const vertexDialogues = [
+            { req: 0, id: 'intro', text: "Welcome, Overseer. I am Dr. Vertex. Focus on the central structure. By striking its parallel lines, you extract Aether." },
+            { req: 15, id: 'drifter', text: "Open the Command Center. Summon a Drifter. Notice how they utilize corresponding angle pairs to scrape the surface automatically." },
+            { req: 100, id: 'upgrade_click', text: "Proportionality dictates that upgrading your core kinetic force is the most efficient path. Buy research upgrades to scale." },
+            { req: 1000, id: 'more_seekers', text: "New anomaly detected. Higher-tier seekers use intersecting planar geometry to extract significantly more Aether." },
+            { req: 1000000, id: 'ascend', text: "One Million Aether! The geometry cannot hold. Ascend to the next Dimension to gain a permanent prestige multiplier." }
+        ];
+
+        window.checkVertexDialogues = function() {
+            for (let i = 0; i < vertexDialogues.length; i++) {
+                const d = vertexDialogues[i];
+                if (state.lifetimeAether >= d.req && !state.dialoguesShown.includes(d.id)) {
+                    state.dialoguesShown.push(d.id);
+                    setTxt('vertex-text', d.text);
+                    const guide = document.getElementById('vertex-guide');
+                    if(guide) guide.classList.add('visible');
+                    break; 
+                }
+            }
+        };
+        window.dismissVertex = function() { 
+            const guide = document.getElementById('vertex-guide');
+            if(guide) guide.classList.remove('visible'); 
+        };
+
+        // 5. THREE.JS ENGINE SETUP
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050510, 0.06);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const light1 = new THREE.PointLight(0xffffff, 2, 50); light1.position.set(5, 5, 5); scene.add(light1);
+        const light2 = new THREE.PointLight(0xffffff, 2, 50); light2.position.set(-5, -5, 5); scene.add(light2);
+        scene.add(new THREE.AmbientLight(0x222233, 1.5));
+
+        const monolithMaterial = new THREE.MeshNormalMaterial({ wireframe: false, flatShading: true, transparent: true, opacity: 0.9 });
+        let monolith = new THREE.Mesh(dimensions[0].geo, monolithMaterial);
+        let monolithWire = new THREE.Mesh(dimensions[0].geo, new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.4 }));
+        monolith.add(monolithWire);
+        scene.add(monolith);
+
+        const shardGroup = new THREE.Group();
+        for(let i=0; i<300; i++) {
+            const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.5), new THREE.MeshBasicMaterial({ color: dimensions[0].color, wireframe: true, transparent: true, opacity: 0.2 }));
+            shard.position.set((Math.random()-0.5)*150, (Math.random()-0.5)*150, (Math.random()-0.5)*150);
+            shard.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+            shardGroup.add(shard);
+        }
+        scene.add(shardGroup);
+        camera.position.z = 7;
+
+        // 6. CLASSES & LOGIC
+        class SeekerUnit {
+            constructor(type) {
+                this.config = state.seekers[type];
+                let geo;
+                switch(this.config.geometry) {
+                    case 'octahedron': geo = new THREE.OctahedronGeometry(this.config.size, 0); break;
+                    case 'torus': geo = new THREE.TorusGeometry(this.config.size, this.config.size/3, 8, 16); break;
+                    case 'icosahedron': geo = new THREE.IcosahedronGeometry(this.config.size, 0); break;
+                    case 'torusKnot': geo = new THREE.TorusKnotGeometry(this.config.size, this.config.size/4, 64, 8, 2, 3); break;
+                    default: geo = new THREE.SphereGeometry(this.config.size, 8, 8);
+                }
+                this.mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: this.config.color, wireframe: true }));
+                const inner = new THREE.Mesh(geo.clone(), new THREE.MeshBasicMaterial({ color: this.config.color, transparent: true, opacity: 0.5 }));
+                inner.scale.set(0.8, 0.8, 0.8);
+                this.mesh.add(inner);
+                this.mesh.position.set((Math.random()-0.5)*15, (Math.random()-0.5)*15, (Math.random()-0.5)*15);
+                scene.add(this.mesh);
+                this.target = this.newTarget();
+                this.speed = 0.01 + Math.random()*0.02;
+            }
+            newTarget() {
+                return new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize().multiplyScalar(2.5 + Math.random()*2);
+            }
+            update() {
+                this.mesh.position.lerp(this.target, this.speed);
+                this.mesh.rotation.x += 0.05; this.mesh.rotation.y += 0.05;
+                if(this.mesh.position.distanceTo(this.target) < 0.3) {
+                    this.target = this.newTarget();
+                    let mult = 1;
+                    Object.keys(state.rituals).forEach(k => {
+                        const rit = state.rituals[k];
+                        if (rit.type === 'cascade' && Date.now() / 1000 < rit.activeUntil) mult *= rit.power;
+                    });
+                    
+                    let artMult = 1;
+                    Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+
+                    addAether(this.config.yield * state.prestige * artMult * mult);
+                    this.mesh.scale.set(1.5, 1.5, 1.5);
+                    setTimeout(() => this.mesh.scale.set(1, 1, 1), 100);
+                }
+            }
+        }
+
+        // 7. FIREBASE & CLOUD SAVE
+        const firebaseConfigParams = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        window.appFb = null; window.authFb = null; window.dbFb = null;
+        try {
+            window.appFb = initializeApp(JSON.parse(firebaseConfigParams));
+            window.authFb = getAuth(window.appFb);
+            window.dbFb = getFirestore(window.appFb);
+        } catch (e) { console.log("Firebase not initialized", e); }
+        
+        const appIdStr = typeof __app_id !== 'undefined' ? __app_id : 'aether-protocol';
+        window.currentUser = null;
+
+        const initAuthData = async () => {
+            if (!window.authFb) {
+                const mod = document.getElementById('tutorial-modal');
+                if(mod) mod.classList.remove('hidden');
+                return;
+            }
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try { await signInWithCustomToken(window.authFb, __initial_auth_token); } catch(e) { console.error(e); }
+            } else {
+                try { await signInAnonymously(window.authFb); } catch(e) { console.error(e); }
+            }
+        };
+
+        if (window.authFb) {
+            onAuthStateChanged(window.authFb, async (user) => {
+                if (user) {
+                    window.currentUser = user;
+                    await loadGameFromCloud();
+                    const mod = document.getElementById('tutorial-modal');
+                    if(mod) mod.classList.remove('hidden');
+                }
+            });
+        }
+        initAuthData();
+
+        function rebuildVisuals() {
+            window.activeSeekerMeshes.forEach(s => {
+                scene.remove(s.mesh);
+                s.mesh.children.forEach(c => {
+                    if (c.geometry) c.geometry.dispose();
+                    if (c.material) c.material.dispose();
+                });
+                if(s.mesh.geometry) s.mesh.geometry.dispose();
+                if(s.mesh.material) s.mesh.material.dispose();
+            });
+            window.activeSeekerMeshes.length = 0;
+            
+            Object.keys(state.seekers).forEach(k => {
+                const s = state.seekers[k];
+                const visualCount = Math.min(s.count, 20); 
+                for (let i = 0; i < visualCount; i++) window.activeSeekerMeshes.push(new SeekerUnit(k));
+            });
+        }
+
+        async function loadGameFromCloud() {
+            if (!window.currentUser || !window.dbFb) return;
+            try {
+                const docSnap = await getDoc(doc(window.dbFb, 'artifacts', appIdStr, 'users', window.currentUser.uid, 'savedata', 'game'));
+                if (docSnap.exists()) {
+                    const data = JSON.parse(docSnap.data().state);
+                    Object.keys(data).forEach(k => {
+                        if (k === 'activeSeekers' || k === 'clickAnimations' || k === 'anomaly' || k === 'dialoguesShown') return;
+                        if (Array.isArray(data[k])) {
+                            state[k] = data[k];
+                        } else if(typeof state[k] === 'object' && state[k] !== null) {
+                            Object.keys(data[k]).forEach(subK => {
+                                if(state[k][subK]) Object.assign(state[k][subK], data[k][subK]);
+                            });
+                        } else {
+                            state[k] = data[k];
+                        }
+                    });
+
+                    // Safeguard
+                    if (isNaN(state.aether) || !state.aether) state.aether = 0;
+                    if (isNaN(state.totalAether) || !state.totalAether) state.totalAether = 0;
+                    if (isNaN(state.lifetimeAether) || !state.lifetimeAether) state.lifetimeAether = 0;
+                    if (isNaN(state.clickPower) || !state.clickPower) state.clickPower = 1;
+                    if (isNaN(state.prestige) || !state.prestige) state.prestige = 1;
+                    if (isNaN(state.critChance)) state.critChance = 0;
+                    if (isNaN(state.passiveGen)) state.passiveGen = 0;
+
+                    rebuildVisuals();
+
+                    const secondsOffline = (Date.now() - state.lastSaveTime) / 1000;
+                    if (secondsOffline > 60 && state.lifetimeAether > 0) {
+                        const rate = calculatePassiveRate();
+                        const gained = rate * secondsOffline;
+                        if(gained > 0) {
+                            state.aether += gained; state.totalAether += gained; state.lifetimeAether += gained;
+                            setTxt('offline-time', `${Math.floor(secondsOffline/3600)}h ${Math.floor((secondsOffline%3600)/60)}m`);
+                            setTxt('offline-gained', fNum(gained));
+                            const offMod = document.getElementById('offline-modal');
+                            const tutMod = document.getElementById('tutorial-modal');
+                            if(offMod) offMod.classList.remove('hidden');
+                            if(tutMod) tutMod.classList.add('hidden');
+                        }
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        window.saveGameToCloud = async function() {
+            if (!window.currentUser || !window.dbFb) return;
+            state.lastSaveTime = Date.now();
+            try { 
+                const saveState = { ...state };
+                delete saveState.activeSeekers;
+                delete saveState.clickAnimations;
+                delete saveState.anomaly;
+                await setDoc(doc(window.dbFb, 'artifacts', appIdStr, 'users', window.currentUser.uid, 'savedata', 'game'), { state: JSON.stringify(saveState) }); 
+            } 
+            catch (e) { console.error(e); }
+        }
+        setInterval(window.saveGameToCloud, 10000);
+
+        // 8. GAME ACTIONS & DOM MANIPULATION
+        window.startGame = function() {
+            const overlay = document.getElementById('modal-overlay');
+            if(overlay) overlay.style.display = 'none';
+            initAudio();
+            buildCards();
+            updateTheme();
+            updateUI();
+        };
+
+        window.claimOffline = function() {
+            const offMod = document.getElementById('offline-modal');
+            if(offMod) offMod.classList.add('hidden');
+            window.startGame();
+        };
+
+        function getSynergyMult() {
+            const dCount = state.seekers.seeker_0.count;
+            return 1 + (dCount * state.metaSkills.synergy.lv * 0.005);
+        }
+
+        function calculatePassiveRate() {
+            let base = 0;
+            Object.keys(state.research).forEach(k => { if(state.research[k].type === 'passive' && state.research[k].lv > 0) base += 50 * Math.pow(2, state.research[k].lv); });
+            Object.keys(state.seekers).forEach(k => base += state.seekers[k].count * state.seekers[k].yield);
+            
+            const voidMult = 1 + state.metaSkills.passPow.lv;
+            const synergy = getSynergyMult();
+            let ritualMult = 1;
+            Object.keys(state.rituals).forEach(k => { if (state.rituals[k].type === 'cascade' && Date.now()/1000 < state.rituals[k].activeUntil) ritualMult *= state.rituals[k].power; });
+            
+            let artMult = 1;
+            Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+            
+            return base * voidMult * synergy * ritualMult * state.prestige * artMult;
+        }
+
+        function buildCards() {
+            let html = '';
+            Object.keys(state.seekers).forEach(k => {
+                const s = state.seekers[k];
+                const hiddenCls = state.lifetimeAether < s.unlockReq ? 'hidden' : '';
+                html += `<div id="card-${k}" class="expandable-card p-6 cursor-pointer ${hiddenCls}" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3"><div class="w-6 h-6 flex-shrink-0">${getShapeSVG(s.geometry, s.color)}</div><span class="text-[11px] font-bold uppercase">${s.name}</span></div>
+                        <span class="text-xs opacity-50" id="count-${k}">${s.count}</span>
+                    </div>
+                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${s.lore}</p><p class="text-[10px] font-bold text-sky-200 mb-4">Mechanic: ${s.mechanic}</p><button id="buy-${k}" onclick="window.buySeeker('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Summon [<span id="cost-${k}">${fNum(s.cost)}</span>]</button></div></div>`;
+            });
+            const seekPanel = document.getElementById('panel-seekers');
+            if(seekPanel) seekPanel.innerHTML = html;
+
+            html = '';
+            Object.keys(state.research).forEach(k => {
+                const r = state.research[k];
+                const hiddenCls = state.lifetimeAether < r.unlockReq ? 'hidden' : '';
+                const c = {'click':'text-emerald-400', 'crit':'text-amber-400', 'passive':'text-blue-400', 'auto':'text-pink-400', 'speed':'text-indigo-400'}[r.type];
+                html += `<div id="card-res-${k}" class="expandable-card p-6 cursor-pointer ${hiddenCls}" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><span class="text-[11px] font-bold uppercase ${c}">${r.name}</span><span class="text-xs opacity-50" id="lv-res-${k}">LV.${r.lv}</span></div>
+                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${r.lore}</p><p class="text-[10px] font-bold ${c.replace('400','200')} mb-4">Mechanic: ${r.mechanic}</p><button id="btn-res-${k}" onclick="window.buyResearch('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Research [<span id="cost-res-${k}">${fNum(r.cost)}</span>]</button></div></div>`;
+            });
+            const resPanel = document.getElementById('panel-research');
+            if(resPanel) resPanel.innerHTML = html;
+
+            html = '';
+            Object.keys(state.rituals).forEach(k => {
+                const r = state.rituals[k];
+                const hiddenCls = state.dimIndex < r.unlockDim ? 'hidden' : ''; // Tied to Dimensions
+                const c = r.type === 'surge' ? 'text-cyan-400' : 'text-rose-500';
+                html += `<div id="card-rit-${k}" class="expandable-card p-6 cursor-pointer ${hiddenCls}" onclick="this.classList.toggle('active')">
+                    <div class="flex justify-between items-center"><span class="text-[11px] font-bold uppercase ${c}">${r.name}</span><span class="text-[10px] font-bold opacity-50 bg-white/10 px-2 py-1 rounded" id="cd-${k}">READY</span></div>
+                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${r.lore}</p><p class="text-[10px] font-bold ${c.replace('400','200')} mb-4">Mechanic: ${r.mechanic}</p><button id="btn-rit-${k}" onclick="window.castRitual('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Cast Ritual</button></div></div>`;
+            });
+            const ritPanel = document.getElementById('panel-rituals');
+            if(ritPanel) ritPanel.innerHTML = html;
+
+            html = '';
+            Object.keys(state.metaSkills).forEach(k => {
+                const s = state.metaSkills[k];
+                html += `<div class="p-6 rounded-xl border border-fuchsia-400/20 bg-fuchsia-400/5 mb-3">
+                    <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold uppercase text-fuchsia-400">${s.name}</span><span class="text-[10px] opacity-50" id="lv-meta-${k}">LV.${s.lv}</span></div>
+                    <p class="text-[10px] opacity-60 mb-3">${s.desc}</p><button id="btn-meta-${k}" onclick="window.buyMeta('${k}')" class="btn-black w-full py-3 rounded-lg text-[10px] font-bold uppercase" ${state.voidMatter<s.cost?'disabled':''}>Upgrade [${s.cost} VM]</button></div>`;
+            });
+            html += `<div class="my-6 border-t border-white/10"></div><p class="text-[10px] uppercase tracking-widest opacity-50 mb-4 text-center">Discovered Artifacts</p>`;
+            Object.keys(state.artifacts).forEach(k => {
+                const a = state.artifacts[k];
+                const hiddenCls = state.dimIndex < a.unlockDim ? 'hidden' : '';
+                const bg = a.owned ? 'bg-amber-400/20 border-amber-400/50' : 'bg-white/5 border-white/10';
+                const textColor = a.owned ? 'text-amber-400' : 'text-white/50';
+                html += `<div id="card-art-${k}" class="p-6 rounded-xl border ${bg} ${hiddenCls} mb-3">
+                    <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold uppercase ${textColor}">${a.name}</span><span class="text-[10px] font-bold opacity-50 px-2 py-1 rounded" id="status-art-${k}">${a.owned ? 'ACTIVE' : 'LOCKED'}</span></div>
+                    <p class="text-[10px] opacity-60 italic mb-2">"${a.lore}"</p><p class="text-[10px] font-bold text-amber-200">${a.mechanic}</p></div>`;
+            });
+            const vsCont = document.getElementById('void-skills-container');
+            if(vsCont) vsCont.innerHTML = html;
+        }
+
+        function updateUI() {
+            setTxt('aether-count', fNum(state.aether));
+            setTxt('void-display', state.voidMatter);
+            setTxt('vm-count', state.voidMatter);
+            
+            const tabResearch = document.getElementById('tab-research');
+            const tabRituals = document.getElementById('tab-rituals');
+            const tabVoid = document.getElementById('tab-void');
+
+            if (state.lifetimeAether >= 50 && tabResearch) tabResearch.classList.remove('hidden');
+            if (state.dimIndex >= 1 && tabRituals) tabRituals.classList.remove('hidden'); // rituals at Dim 1+
+            if (state.dimIndex >= 1 && tabVoid) tabVoid.classList.remove('hidden');
+
+            const goal = dimensions[state.dimIndex].goal;
+            const prog = Math.min(100, (state.totalAether / goal) * 100);
+            
+            const progressEl = document.getElementById('ascend-progress');
+            if(progressEl) progressEl.style.width = prog + '%';
+            
+            setTxt('ascend-goal-text', fNum(goal));
+            const btnAscend = document.getElementById('btn-ascend');
+            const ascPreview = document.getElementById('ascend-reward-preview');
+
+            if (prog >= 100) {
+                if(btnAscend) btnAscend.disabled = false;
+                const vmGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
+                setTxt('ascend-reward-preview', `Grants +${vmGain} Void Matter`);
+                if(ascPreview) ascPreview.style.opacity = 1;
+            } else {
+                if(btnAscend) btnAscend.disabled = true;
+                if(ascPreview) ascPreview.style.opacity = 0;
+            }
+
+            let r = 0;
+            Object.keys(state.research).forEach(k => { if(state.research[k].type === 'passive' && state.research[k].lv > 0) r += 50 * Math.pow(2, state.research[k].lv); });
+
+            Object.keys(state.seekers).forEach(k => {
+                const s = state.seekers[k]; 
+                r += s.count * s.yield;
+                const el = document.getElementById(`card-${k}`);
+                if(el) {
+                    if (state.lifetimeAether >= s.unlockReq) el.classList.remove('hidden');
+                    setTxt(`cost-${k}`, fNum(s.cost));
+                    setTxt(`count-${k}`, s.count);
+                    const buyBtn = document.getElementById(`buy-${k}`);
+                    if(buyBtn) buyBtn.disabled = state.aether < s.cost;
+                }
+            });
+            
+            Object.keys(state.research).forEach(k => {
+                const res = state.research[k]; 
+                const el = document.getElementById(`card-res-${k}`);
+                if(el) {
+                    if (state.lifetimeAether >= res.unlockReq) el.classList.remove('hidden');
+                    setTxt(`cost-res-${k}`, fNum(res.cost));
+                    setTxt(`lv-res-${k}`, `LV.${res.lv}`);
+                    const btnResEl = document.getElementById(`btn-res-${k}`);
+                    if(btnResEl) btnResEl.disabled = state.aether < res.cost;
+                }
+            });
+
+            Object.keys(state.metaSkills).forEach(k => {
+                const s = state.metaSkills[k];
+                const btn = document.getElementById(`btn-meta-${k}`);
+                if(btn) {
+                    btn.disabled = state.voidMatter < s.cost;
+                    btn.innerText = `Upgrade [${s.cost} VM]`;
+                }
+                setTxt(`lv-meta-${k}`, `LV.${s.lv}`);
+            });
+
+            const now = Date.now()/1000;
+            Object.keys(state.rituals).forEach(k => {
+                const rit = state.rituals[k]; const el = document.getElementById(`card-rit-${k}`);
+                if(el) {
+                    if (state.dimIndex >= rit.unlockDim) el.classList.remove('hidden');
+                    const passed = now - rit.lastUsed; const btn = document.getElementById(`btn-rit-${k}`);
+                    if(btn) {
+                        if (passed < rit.cooldown) {
+                            btn.disabled = true; btn.innerText = `CHARGING...`;
+                            setTxt(`cd-${k}`, Math.ceil(rit.cooldown - passed) + 's');
+                        } else {
+                            btn.disabled = false; btn.innerText = `CAST RITUAL`;
+                            setTxt(`cd-${k}`, 'READY');
+                        }
+                    }
+                }
+            });
+
+            Object.keys(state.artifacts).forEach(k => {
+                const a = state.artifacts[k]; const el = document.getElementById(`card-art-${k}`);
+                if(el && state.dimIndex >= a.unlockDim) {
+                    el.classList.remove('hidden');
+                    if(a.owned) { 
+                        el.classList.add('bg-amber-400/20'); 
+                        setTxt(`status-art-${k}`, "ACTIVE");
+                    }
+                }
+            });
+
+            setTxt('pop-count', window.activeSeekerMeshes.length);
+            let artMult = 1; Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+            setTxt('mult-count', fNum(state.prestige * artMult) + 'x');
+            
+            const voidMult = 1 + state.metaSkills.passPow.lv;
+            const synergy = getSynergyMult();
+            let ritualMult = 1;
+            Object.keys(state.rituals).forEach(k => { if (state.rituals[k].type === 'cascade' && Date.now()/1000 < state.rituals[k].activeUntil) ritualMult *= state.rituals[k].power; });
+            setTxt('aether-rate', fNum(r * voidMult * synergy * ritualMult * state.prestige * artMult));
+        }
+
+        function addAether(v) {
+            const oldLifetime = state.lifetimeAether;
+            state.aether += v;
+            state.totalAether += v;
+            state.lifetimeAether += v;
+            
+            // Rebuild cards if unlocking new items
+            if (Math.floor(Math.log10(oldLifetime || 1)) !== Math.floor(Math.log10(state.lifetimeAether || 1))) {
+                buildCards();
+            }
+            updateUI();
+        }
+
+        window.toggleDrawer = () => {
+            isMenuOpen = !isMenuOpen; 
+            const cd = document.getElementById('command-drawer');
+            if(cd) cd.classList.toggle('open', isMenuOpen);
+            
+            const tr = document.getElementById('tab-roadmap');
+            if (isMenuOpen && tr && tr.classList.contains('active')) setTimeout(() => { const activeNode = document.querySelector('.roadmap-node.active'); if(activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+        };
+        window.setTab = (t) => {
+            ['seekers', 'research', 'rituals', 'void', 'roadmap'].forEach(p => { 
+                const pEl = document.getElementById('panel-'+p);
+                const tEl = document.getElementById('tab-'+p);
+                if(pEl) pEl.classList.add('hidden'); 
+                if(tEl) tEl.classList.remove('active'); 
+            });
+            const npEl = document.getElementById('panel-'+t);
+            const ntEl = document.getElementById('tab-'+t);
+            if(npEl) npEl.classList.remove('hidden'); 
+            if(ntEl) ntEl.classList.add('active');
+            if (t === 'roadmap') setTimeout(() => { const activeNode = document.querySelector('.roadmap-node.active'); if(activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+        };
+        window.buySeeker = (k, e) => { e.stopPropagation(); const s = state.seekers[k]; if(state.aether >= s.cost) { state.aether -= s.cost; s.count++; s.cost *= 1.25; window.activeSeekerMeshes.push(new SeekerUnit(k)); updateUI(); } };
+        window.buyResearch = (k, e) => { e.stopPropagation(); const r = state.research[k]; if(state.aether >= r.cost) { state.aether -= r.cost; r.lv++; r.cost *= 2.5; if(r.type === 'click') state.clickPower *= 2; if(r.type === 'crit') state.critChance = Math.min(0.5, state.critChance + 0.05); updateUI(); } };
+        window.buyMeta = (k) => { const s = state.metaSkills[k]; if(state.voidMatter >= s.cost) { state.voidMatter -= s.cost; s.lv++; s.cost = Math.floor(s.cost * 1.8); buildCards(); updateUI(); } };
+        
+        window.castRitual = (k, e) => { 
+            e.stopPropagation(); 
+            const r = state.rituals[k]; 
+            const now = Date.now()/1000; 
+            if(now - r.lastUsed >= r.cooldown) { 
+                r.lastUsed = now; 
+                if(r.type === 'surge') addAether(calculatePassiveRate() * r.power); 
+                if(r.type === 'cascade') r.activeUntil = now + r.duration; 
+                updateUI(); 
+            } 
+        };
+        
+        window.ascend = async () => {
+            playAscend();
+            const vmGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
+            state.voidMatter += vmGain;
+            state.dimIndex++; if(state.dimIndex >= dimensions.length) state.dimIndex = dimensions.length - 1;
+            Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].unlockDim <= state.dimIndex) state.artifacts[k].owned = true; });
+            state.aether = 0; state.totalAether = 0;
+            Object.keys(state.seekers).forEach(k => { state.seekers[k].count = 0; state.seekers[k].cost = 15 * Math.pow(1.8, parseInt(k.split('_')[1])); });
+            
+            window.activeSeekerMeshes.forEach(s => {
+                scene.remove(s.mesh);
+                s.mesh.children.forEach(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); });
+                if(s.mesh.geometry) s.mesh.geometry.dispose(); if(s.mesh.material) s.mesh.material.dispose();
+            });
+            window.activeSeekerMeshes.length = 0;
+
+            document.body.style.pointerEvents = 'none';
+            for(let i=0; i<60; i++) { monolith.rotation.y += 0.15 * (i/10); monolith.rotation.x += 0.15 * (i/10); camera.position.z -= 0.08; shardGroup.scale.multiplyScalar(1.03); await new Promise(r => setTimeout(r, 16)); }
+            updateTheme(); buildCards(); updateUI();
+            for(let i=0; i<60; i++) { monolith.rotation.y -= 0.15 * ((60-i)/10); camera.position.z += 0.08; shardGroup.scale.multiplyScalar(0.9708); await new Promise(r => setTimeout(r, 16)); }
+            shardGroup.scale.set(1,1,1); document.body.style.pointerEvents = 'auto';
+        };
+
+        function updateTheme() {
+            const dim = dimensions[state.dimIndex];
+            document.documentElement.style.setProperty('--theme-color', '#' + dim.color.toString(16).padStart(6,'0'));
+            setTxt('dim-label', `${state.dimIndex+1}. ${dim.name}`);
+            const dl = document.getElementById('dim-label');
+            if(dl) dl.style.color = '#' + dim.color.toString(16).padStart(6,'0');
+            document.body.style.backgroundColor = `hsl(${dim.hue}, 40%, 6%)`;
+            monolith.geometry.dispose(); monolithWire.geometry.dispose();
+            monolith.geometry = dim.geo; monolithWire.geometry = dim.geo;
+            shardGroup.children.forEach(s => s.material.color.setHex(dim.color));
+
+            const cont = document.getElementById('roadmap-container');
+            if(cont) {
+                cont.innerHTML = '';
+                dimensions.forEach((d, i) => {
+                    if(i > state.dimIndex + 3 && i < dimensions.length - 1) return;
+                    const active = i === state.dimIndex; const unlocked = i < state.dimIndex;
+                    cont.innerHTML += `<div class="roadmap-node ${active?'active':(unlocked?'unlocked':'')} " style="opacity:${active||unlocked?1:0.3}">
+                        ${i < dimensions.length-1 ? '<div class="roadmap-line"></div>':''}
+                        <div class="roadmap-dot"></div><div><div class="text-[11px] font-bold uppercase" style="color:${active||unlocked?'#'+d.color.toString(16):'#fff'}">${unlocked||active||i===state.dimIndex+1?d.name:'???'}</div></div></div>`;
+                });
+            }
+        }
+
+        const raycaster = new THREE.Raycaster();
+        function handleInteraction(clientX, clientY, isAuto = false) {
+            const now = Date.now();
+            const isOverdrive = now < state.overdriveUntil;
+            if (!isAuto) {
+                initAudio();
+                if (now - state.lastClickTime < 1000 || isOverdrive) state.combo = Math.min(5.0, state.combo + (isOverdrive ? 0.5 : 0.05));
+                else state.combo = 1.0;
+                state.lastClickTime = now;
+                setTxt('combo-text', `x${state.combo.toFixed(2)}`);
+                const cf = document.getElementById('combo-fill');
+                if(cf) cf.style.transform = `scaleX(${state.combo / 5.0})`;
+                const cc = document.getElementById('combo-container');
+                if(cc) cc.style.opacity = state.combo > 1.1 ? 1 : 0;
+            }
+
+            raycaster.setFromCamera(new THREE.Vector2((clientX/window.innerWidth)*2-1, -(clientY/window.innerHeight)*2+1), camera);
+            if(!isAuto && anomaly && anomaly.active && raycaster.intersectObject(anomaly.mesh).length > 0) {
+                anomaly.active = false; scene.remove(anomaly.mesh); anomaly = null;
+                if(Math.random() < 0.2) { 
+                    state.overdriveUntil = now + 15000; 
+                    const ov = document.getElementById('overdrive-vignette');
+                    if(ov) { ov.classList.add('overdrive-active'); setTimeout(() => ov.classList.remove('overdrive-active'), 15000); }
+                    playCrit(); 
+                } 
+                else { addAether(Math.max(calculatePassiveRate() * 60, 1000)); playAscend(); }
+                return;
+            }
+
+            if(raycaster.intersectObject(monolith).length > 0 || isAuto || isOverdrive) {
+                let isCrit = isOverdrive || Math.random() < state.critChance;
+                let voidMult = 1 + state.metaSkills.clickPow.lv;
+                let ritMult = 1; Object.keys(state.rituals).forEach(k => { if (state.rituals[k].type === 'cascade' && Date.now()/1000 < state.rituals[k].activeUntil) ritMult *= state.rituals[k].power; });
+                let artMult = 1; Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+                
+                let val = state.clickPower * voidMult * state.combo * ritMult * state.prestige * artMult;
+                if(isCrit) val *= 10;
+                addAether(val);
+                
+                if(!isAuto) {
+                    isCrit ? playCrit() : playClick();
+                    window.monolithPhysics.velocity += 0.15; if (window.monolithPhysics.velocity > 0.3) window.monolithPhysics.velocity = 0.3;
+                    const countEl = document.getElementById('aether-count'); 
+                    if(countEl) { countEl.style.transform = 'scale(1.08)'; setTimeout(() => countEl.style.transform = 'scale(1)', 50); }
+                    const label = document.createElement('div'); label.className = isCrit ? 'click-text crit-text' : 'click-text'; label.style.left = clientX + 'px'; label.style.top = clientY + 'px'; label.style.color = isCrit ? '#facc15' : '#' + dimensions[state.dimIndex].color.toString(16); label.innerText = isCrit ? `CRIT! +${fNum(val)}` : `+${fNum(val)}`; document.body.appendChild(label); setTimeout(() => label.remove(), 1000);
+                    const cp = document.getElementById('click-prompt');
+                    if(cp) cp.style.opacity = '0';
+                }
+            }
+        }
+
+        window.addEventListener('mousedown', e => handleInteraction(e.clientX, e.clientY));
+        window.addEventListener('touchstart', e => handleInteraction(e.touches[0].clientX, e.touches[0].clientY));
+
+        setInterval(() => {
+            const now = Date.now();
+            if (now - state.lastClickTime > 1000 && state.combo > 1.0 && now > state.overdriveUntil) {
+                state.combo = Math.max(1.0, state.combo - 0.2);
+                setTxt('combo-text', `x${state.combo.toFixed(2)}`);
+                const cf = document.getElementById('combo-fill');
+                if(cf) cf.style.transform = `scaleX(${state.combo / 5.0})`;
+                const cc = document.getElementById('combo-container');
+                if(state.combo <= 1.0 && cc) cc.style.opacity = 0;
+            }
+            const rate = calculatePassiveRate();
+            if(rate > 0) addAether(rate / 10);
+        }, 100);
+
+        setInterval(() => {
+            let autoLv = 0; Object.keys(state.research).forEach(k => { if (state.research[k].type === 'auto') autoLv += state.research[k].lv; });
+            if (autoLv > 0) for (let i = 0; i < autoLv * 2; i++) handleInteraction(window.innerWidth/2, window.innerHeight/2, true);
+            
+            // Anomalies now have a 1.5% chance to spawn per second (down from 10%)
+            if(!anomaly && Math.random() < 0.015) {
+                const isRed = Math.random() < 0.1;
+                const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1), new THREE.MeshBasicMaterial({color: isRed ? 0xf43f5e : 0xfacc15, wireframe:true}));
+                mesh.position.set((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*10); scene.add(mesh);
+                anomaly = { mesh, active: true }; setTimeout(() => { if(anomaly) { scene.remove(anomaly.mesh); anomaly = null; } }, 8000);
+            }
+            updateUI(); window.checkVertexDialogues();
+        }, 1000);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const speed = 1 + (state.dimIndex * 0.05);
+            monolith.rotation.x += 0.002 * speed; monolith.rotation.y += 0.003 * speed;
+            if(anomaly && anomaly.active) { anomaly.mesh.rotation.x += 0.05; anomaly.mesh.rotation.y += 0.05; anomaly.mesh.scale.setScalar(1 + Math.sin(Date.now()*0.01)*0.2); }
+            const force = (window.monolithPhysics.target - window.monolithPhysics.scale) * window.monolithPhysics.tension;
+            window.monolithPhysics.velocity += force; window.monolithPhysics.velocity *= window.monolithPhysics.friction; window.monolithPhysics.scale += window.monolithPhysics.velocity;
+            const finalScale = Math.max(0.1, window.monolithPhysics.scale + Math.sin(Date.now() * 0.002) * 0.04); 
+            monolith.scale.setScalar(finalScale);
+            shardGroup.rotation.y += 0.0005 * speed; shardGroup.rotation.x += 0.0002 * speed;
+            
+            for(let i = window.clickAnimations.length - 1; i >= 0; i--) {
+                let anim = window.clickAnimations[i];
+                anim.life -= 0.03; 
+                anim.mesh.scale.addScalar(0.2);
+                anim.mesh.material.opacity = anim.life;
+                if(anim.life <= 0) {
+                    scene.remove(anim.mesh);
+                    anim.mesh.geometry.dispose();
+                    anim.mesh.material.dispose();
+                    window.clickAnimations.splice(i, 1);
+                }
+            }
+
+            window.activeSeekerMeshes.forEach(s => s.update());
+            renderer.render(scene, camera);
+        }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        
+        // Ensure DOM renders before animation starts
+        buildCards();
+        updateTheme();
+        animate();
+    </script>
+</body>
+</html>
