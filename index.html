@@ -28,7 +28,7 @@
         #ascend-progress { height: 100%; width: 0%; background: var(--theme-color); box-shadow: 0 0 25px var(--theme-color); transition: width 0.5s ease, background-color 1s ease; }
 
         /* Central Display */
-        #main-display { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; width: 100%; }
+        #main-display { position: fixed; top: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; width: 100%; transition: transform 0.1s; }
         #aether-count { font-size: 6rem; font-weight: 900; letter-spacing: -0.05em; line-height: 1; text-shadow: 0 0 40px rgba(255, 255, 255, 0.2); transition: transform 0.1s; }
         .stats-sub { display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.8; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
         
@@ -36,12 +36,29 @@
         #combo-container { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; opacity: 0; transition: opacity 0.3s; }
         #combo-text { font-size: 2rem; font-weight: 900; color: #facc15; text-shadow: 0 0 20px #facc15; font-style: italic; }
         #combo-bar { width: 150px; height: 4px; background: rgba(255,255,255,0.1); margin-top: 5px; border-radius: 2px; overflow: hidden; }
-        #combo-fill { height: 100%; width: 100%; background: #facc15; transform-origin: left; }
+        #combo-fill { height: 100%; width: 100%; background: #facc15; transform-origin: left; transition: transform 0.1s ease-out; }
 
-        /* Overdrive Vignette */
-        #overdrive-vignette { position: fixed; inset: 0; box-shadow: inset 0 0 150px rgba(244, 63, 94, 0); pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
-        .overdrive-active { box-shadow: inset 0 0 250px rgba(244, 63, 94, 0.8) !important; animation: pulse-red 1s infinite alternate; }
-        @keyframes pulse-red { 0% { box-shadow: inset 0 0 150px rgba(244, 63, 94, 0.5); } 100% { box-shadow: inset 0 0 300px rgba(244, 63, 94, 0.9); } }
+        /* Active Buff Indicators */
+        #buff-indicators { position: fixed; top: 35%; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; pointer-events: none; }
+        .buff-tag { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; animation: pulse 1s infinite alternate; }
+
+        /* Overdrive / Buff Vignette */
+        #buff-vignette { position: fixed; inset: 0; box-shadow: inset 0 0 150px rgba(0, 0, 0, 0); pointer-events: none; z-index: 5; transition: box-shadow 0.3s; }
+        .vignette-frenzy { box-shadow: inset 0 0 250px rgba(245, 158, 11, 0.4) !important; animation: pulse-orange 1s infinite alternate; }
+        .vignette-convergence { box-shadow: inset 0 0 250px rgba(244, 63, 94, 0.6) !important; animation: pulse-red 1s infinite alternate; }
+        .vignette-singularity { box-shadow: inset 0 0 300px rgba(251, 191, 36, 0.8) !important; background: rgba(251, 191, 36, 0.2); animation: pulse-singularity 0.5s infinite alternate; }
+        @keyframes pulse-orange { 0% { box-shadow: inset 0 0 150px rgba(245, 158, 11, 0.2); } 100% { box-shadow: inset 0 0 300px rgba(245, 158, 11, 0.5); } }
+        @keyframes pulse-red { 0% { box-shadow: inset 0 0 150px rgba(244, 63, 94, 0.3); } 100% { box-shadow: inset 0 0 300px rgba(244, 63, 94, 0.7); } }
+        @keyframes pulse-singularity { 0% { box-shadow: inset 0 0 300px rgba(251, 191, 36, 0.6); } 100% { box-shadow: inset 0 0 500px rgba(251, 191, 36, 1); } }
+
+        /* Screen Shake */
+        @keyframes shake {
+            10%, 90% { transform: translateX(-50%) translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translateX(-50%) translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translateX(-50%) translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translateX(-50%) translate3d(8px, 0, 0); }
+        }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
         /* Command Drawer */
         #command-drawer {
@@ -104,12 +121,17 @@
         .roadmap-node.unlocked .roadmap-dot { background: var(--theme-color); box-shadow: 0 0 15px var(--theme-color); }
         .roadmap-node.active .roadmap-dot { background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px var(--theme-color); transform: scale(1.5); animation: pulse-dot 2s infinite; }
         @keyframes pulse-dot { 0% { transform: scale(1.2); } 50% { transform: scale(1.8); } 100% { transform: scale(1.2); } }
+        
+        /* Theorem Grid */
+        .theorem-badge { width: 100%; aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; position: relative; overflow: hidden; }
+        .theorem-badge.unlocked { background: rgba(16, 185, 129, 0.1); border-color: #10b981; box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2); }
+        .theorem-badge.unlocked::after { content: '✓'; color: #10b981; font-size: 24px; font-weight: bold; position: absolute; opacity: 0.15; right: -5px; bottom: -10px; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div id="ascend-container"><div id="ascend-progress"></div></div>
-    <div id="overdrive-vignette"></div>
+    <div id="buff-vignette"></div>
 
     <!-- Main Display -->
     <div id="main-display">
@@ -120,8 +142,12 @@
             <div>Pop <span id="pop-count" class="text-white">0</span></div>
             <div class="opacity-50">Mult <span id="mult-count" class="text-white">1.0x</span></div>
             <div class="opacity-50">VM <span id="vm-count" class="text-[var(--void-color)]">0</span></div>
+            <div class="opacity-50 text-amber-400 hidden" id="singularity-display">SHARDS <span id="shard-count">0</span></div>
         </div>
     </div>
+
+    <!-- Active Buffs -->
+    <div id="buff-indicators"></div>
 
     <!-- Combo Meter -->
     <div id="combo-container">
@@ -145,9 +171,10 @@
         <div id="tutorial-modal" class="max-w-xl bg-white/5 border border-white/10 text-white p-14 rounded-[3rem] shadow-2xl text-center hidden">
             <h2 class="text-5xl font-bold mb-6 tracking-tighter uppercase italic">Infinity Protocol</h2>
             <p class="text-base leading-relaxed opacity-70 mb-12">
-                Cloud Sync Established.<br><br>
+                System Initialized.<br><br>
                 <span class="font-bold text-sky-400">Fracture</span> the geometry.<br>
                 <span class="font-bold text-purple-400">Automate</span> your yield.<br>
+                <span class="font-bold text-emerald-400">Prove</span> the theorems.<br>
                 <span class="font-bold text-fuchsia-400">Extract</span> the Void Matter.
             </p>
             <button onclick="window.startGame()" class="btn-black w-full py-6 rounded-2xl font-bold tracking-[0.4em] text-[12px]">COMMENCE EXTRACTION</button>
@@ -163,29 +190,97 @@
         </div>
     </div>
 
+    <!-- System Modal -->
+    <div id="system-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[500] hidden items-center justify-center">
+        <div class="max-w-md w-full bg-white/5 border border-white/10 p-10 rounded-[2rem] shadow-2xl text-center relative">
+            <button onclick="window.toggleSystem()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="text-2xl font-bold uppercase tracking-widest mb-4 text-slate-300">System</h3>
+            <p class="text-[11px] opacity-60 mb-8 leading-relaxed">Game saves locally every 10s. Export your save string to back it up securely on GitHub or transfer devices.</p>
+            <button id="btn-export" onclick="window.exportSave()" class="btn-black w-full py-4 rounded-xl text-[12px] font-bold uppercase tracking-[0.2em] mb-4">Export Save Data</button>
+            <button id="btn-import" onclick="window.importSave()" class="btn-black w-full py-4 rounded-xl text-[12px] font-bold uppercase tracking-[0.2em]">Import Save Data</button>
+            <div class="mt-8 pt-8 border-t border-white/10">
+                <button onclick="if(confirm('HARD RESET? This will wipe everything permanently!')) { localStorage.removeItem('aether_save'); location.reload(); }" class="w-full py-4 rounded-xl text-[11px] font-bold uppercase text-red-500 border border-red-500/30 hover:bg-red-500/10 transition-colors tracking-widest">Hard Reset Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button onclick="window.toggleSystem()" class="fixed bottom-6 right-6 w-12 h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all z-40">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+
     <!-- Command Drawer -->
     <div id="command-drawer">
         <div id="drawer-trigger" onclick="window.toggleDrawer()">Command Center</div>
 
-        <div class="flex justify-around py-8 px-4 flex-shrink-0 border-b border-white/5">
+        <div class="flex flex-wrap justify-around py-4 px-2 flex-shrink-0 border-b border-white/5 gap-y-2">
             <div onclick="window.setTab('seekers')" id="tab-seekers" class="tab-btn active font-bold uppercase tracking-widest">Seekers</div>
             <div onclick="window.setTab('research')" id="tab-research" class="tab-btn font-bold uppercase tracking-widest hidden">Upgrades</div>
             <div onclick="window.setTab('rituals')" id="tab-rituals" class="tab-btn font-bold uppercase tracking-widest text-rose-400 hidden">Rituals</div>
-            <div onclick="window.setTab('void')" id="tab-void" class="tab-btn font-bold uppercase tracking-widest text-fuchsia-400 hidden">Void Matrix</div>
+            <div onclick="window.setTab('void')" id="tab-void" class="tab-btn font-bold uppercase tracking-widest text-fuchsia-400 hidden">Void Web</div>
+            <div onclick="window.setTab('theorems')" id="tab-theorems" class="tab-btn font-bold uppercase tracking-widest text-emerald-400">Theorems</div>
+            <div onclick="window.setTab('constraints')" id="tab-constraints" class="tab-btn font-bold uppercase tracking-widest text-red-400 hidden">Constraints</div>
+            <div onclick="window.setTab('singularity')" id="tab-singularity" class="tab-btn font-bold uppercase tracking-widest text-amber-400 hidden">Singularity</div>
             <div onclick="window.setTab('roadmap')" id="tab-roadmap" class="tab-btn font-bold uppercase tracking-widest">Roadmap</div>
+        </div>
+
+        <!-- Buy Multiplier Control -->
+        <div id="multiplier-bar" class="flex justify-between items-center py-3 px-6 bg-black/40 border-b border-white/5 flex-shrink-0 text-[10px] font-bold uppercase tracking-widest">
+            <span class="opacity-50">Buy Multiplier</span>
+            <div class="flex gap-2">
+                <button onclick="window.setBuyMode(1)" id="btn-buy-1" class="px-2 py-1 rounded bg-white text-black transition-colors">1x</button>
+                <button onclick="window.setBuyMode(10)" id="btn-buy-10" class="px-2 py-1 rounded opacity-50 hover:opacity-100 hover:bg-white/10 transition-colors">10x</button>
+                <button onclick="window.setBuyMode(100)" id="btn-buy-100" class="px-2 py-1 rounded opacity-50 hover:opacity-100 hover:bg-white/10 transition-colors">100x</button>
+                <button onclick="window.setBuyMode('max')" id="btn-buy-max" class="px-2 py-1 rounded opacity-50 hover:opacity-100 hover:bg-white/10 transition-colors">MAX</button>
+            </div>
         </div>
 
         <div id="content-area" class="flex-1 overflow-y-auto p-6 space-y-3 scroll-hide">
             <div id="panel-seekers" class="space-y-3"></div>
             <div id="panel-research" class="hidden space-y-3"></div>
             <div id="panel-rituals" class="hidden space-y-3"></div>
+            
             <div id="panel-void" class="hidden space-y-3">
                 <div class="text-center mb-6">
                     <p class="text-[10px] uppercase tracking-widest opacity-50">Available Void Matter</p>
                     <p class="text-4xl font-bold text-fuchsia-400" id="void-display">0</p>
                 </div>
-                <div id="void-skills-container"></div>
+                <div class="text-[10px] uppercase tracking-widest opacity-50 text-center mb-4 border-b border-white/10 pb-2">The Void Web</div>
+                <div id="void-skills-container" class="relative"></div>
             </div>
+
+            <div id="panel-theorems" class="hidden">
+                <div class="text-[11px] font-bold opacity-30 tracking-widest uppercase mb-4 text-center">Geometric Theorems</div>
+                <p id="theorems-total-text" class="text-[10px] text-center text-emerald-400 mb-6 font-bold">+0% Compounding Yield (Total Levels)</p>
+                <div id="theorems-grid" class="grid grid-cols-3 gap-3"></div>
+            </div>
+
+            <div id="panel-constraints" class="hidden space-y-3">
+                <div class="text-center mb-6">
+                    <h3 class="text-[12px] font-bold uppercase tracking-widest text-red-400 mb-2">Simulated Constraints</h3>
+                    <p class="text-[10px] opacity-60">Bind a constraint to the next run. Reach Dimension 3 under these conditions to extract a permanent +50% global yield multiplier.</p>
+                </div>
+                <div id="constraints-container"></div>
+            </div>
+
+            <div id="panel-singularity" class="hidden space-y-3">
+                <div class="text-center mb-6">
+                    <p class="text-[10px] uppercase tracking-widest opacity-50 text-amber-400">Available Singularity Shards</p>
+                    <p class="text-5xl font-bold text-amber-400 mb-2 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" id="shard-display">0</p>
+                    <p class="text-[10px] opacity-60 italic max-w-xs mx-auto">Fragments of collapsed realities. Bending the fundamental logic of the simulation.</p>
+                </div>
+                <div class="p-6 rounded-xl border border-red-500/30 bg-red-500/10 mb-6 text-center">
+                    <h3 class="text-[14px] font-bold uppercase tracking-widest text-red-400 mb-2">Collapse Reality</h3>
+                    <p class="text-[10px] opacity-80 mb-4">Destroys EVERYTHING except Singularity Shards and Upgrades. Returns you to the absolute beginning.</p>
+                    <p class="text-[12px] font-bold text-amber-300 mb-4" id="singularity-gain-text">Yields +0 Shards</p>
+                    <button id="btn-collapse" onclick="window.triggerSingularity()" class="w-full py-4 rounded-xl text-[12px] font-bold uppercase text-black bg-red-500 hover:bg-red-400 hover:shadow-[0_0_20px_rgba(239,68,68,0.8)] transition-all tracking-[0.2em]">TRIGGER SINGULARITY</button>
+                </div>
+                <div class="text-[10px] uppercase tracking-widest opacity-50 text-center mb-4 border-b border-white/10 pb-2">Reality Upgrades</div>
+                <div id="singularity-skills-container"></div>
+            </div>
+
             <div id="panel-roadmap" class="hidden">
                 <div class="text-[11px] font-bold opacity-30 tracking-widest uppercase mb-8 text-center">Ascension Roadmap</div>
                 <div id="roadmap-container" class="relative pl-6 pb-10"></div>
@@ -206,10 +301,6 @@
 
     <!-- Core Script -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-
         // 1. UTILS & HELPERS
         const setTxt = (id, text) => { 
             const el = document.getElementById(id); 
@@ -256,6 +347,49 @@
         function playClick() { playTone(800 + Math.random()*200, 'sine', 0.1, 0.05); }
         function playCrit() { playTone(150, 'sawtooth', 0.4, 0.1); playTone(200, 'square', 0.4, 0.05); }
         function playAscend() { [261.63, 329.63, 392.00, 523.25].forEach((f, i) => { setTimeout(() => playTone(f, 'sine', 4.0, 0.1), i * 300); }); }
+        
+        window.triggerShake = function() {
+            const el = document.getElementById('main-display');
+            if(el) {
+                el.classList.remove('shake');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('shake');
+            }
+        }
+
+        // BUY MULTIPLIER LOGIC
+        window.buyMode = 1;
+        window.setBuyMode = (mode) => {
+            window.buyMode = mode;
+            ['1', '10', '100', 'max'].forEach(m => {
+                const btn = document.getElementById('btn-buy-' + m);
+                if(btn) {
+                    if (m == mode) {
+                        btn.classList.add('bg-white', 'text-black');
+                        btn.classList.remove('opacity-50', 'hover:bg-white/10');
+                    } else {
+                        btn.classList.remove('bg-white', 'text-black');
+                        btn.classList.add('opacity-50', 'hover:bg-white/10');
+                    }
+                }
+            });
+            updateUI();
+        };
+
+        function getBulkInfo(currentCost, rate, currency, mode) {
+            let amount = 1;
+            let cost = currentCost;
+            if (mode === 'max') {
+                if (currency < currentCost) return { amount: 0, cost: currentCost }; 
+                amount = Math.floor(Math.log(currency * (rate - 1) / currentCost + 1) / Math.log(rate));
+                if (amount < 1) amount = 1;
+                cost = currentCost * (Math.pow(rate, amount) - 1) / (rate - 1);
+            } else {
+                amount = mode;
+                cost = currentCost * (Math.pow(rate, amount) - 1) / (rate - 1);
+            }
+            return { amount, cost };
+        }
 
         // 2. DATA GENERATION
         const structureNames = [
@@ -286,7 +420,6 @@
             return { name, color, goal, geo, hue };
         });
 
-        // HYBRID PACING FORMULA: Custom hand-coded early game, exponential late game
         const baseSeekerCosts = [15, 2500, 150000, 10000000, 850000000];
         const baseSeekerYields = [1, 25, 800, 45000, 3000000];
         
@@ -300,7 +433,7 @@
                 name: i === 0 ? "Drifter" : `${skPre[i%skPre.length]}${skSuf[(i*3)%skSuf.length]}`,
                 count: 0, cost: cost, yield: yieldAmt, color: dimensions[i%dimensions.length].color,
                 size: 0.05 + (i * 0.001), geometry: ['sphere', 'octahedron', 'torus', 'icosahedron', 'torusKnot'][i%5],
-                unlockReq: i === 0 ? 0 : Math.floor(cost * 0.4), // PERFECT PACING: Unlocks exactly when you have 40% of its cost
+                unlockReq: i === 0 ? 0 : Math.floor(cost * 0.4), 
                 lore: `Extracts Aether using proportional angle pairs of magnitude level ${i}.`,
                 mechanic: `+${fNum(yieldAmt)} Base Yield/sec`
             };
@@ -327,11 +460,13 @@
             };
         }
 
+        const baseMetaCosts = [1, 2, 5, 3, 4];
+        
         const ritualData = {};
         const ritTypes = ['surge', 'cascade'];
         for(let i=0; i<100; i++) {
             const type = ritTypes[i % ritTypes.length];
-            const unlockDimReq = 1 + Math.floor(i/2); // Rituals unlock at Dim 1 (2nd Dimension) and above
+            const unlockDimReq = 1 + Math.floor(i/2); 
             ritualData[`rit_${i}`] = {
                 type: type, name: `${['Chrono', 'Resonance'][i%2]} Rite ${Math.floor(i/2)+1}`,
                 cooldown: type === 'surge' ? 60 + (i*10) : 120 + (i*5), lastUsed: 0, duration: type === 'cascade' ? 20 + i : null,
@@ -349,15 +484,51 @@
             };
         }
 
+        // SCALING THEOREMS DICTIONARY (Infinite Progression)
+        const theoremDefs = {
+            'clicks': { name: "Kinetic", desc: "Fracture the geometry", unit: "Clicks", val: s => s.stats.clicks, req: lv => 100 * Math.pow(4, lv), max: 100 },
+            'lifetime': { name: "Aetheric", desc: "Accumulate Aether", unit: "Aether", val: s => s.lifetimeAether, req: lv => 1000 * Math.pow(100, lv), max: 100 },
+            'drifters': { name: "The Swarm", desc: "Summon Drifters", unit: "Drifters", val: s => s.seekers['seeker_0'].count, req: lv => 10 * (lv+1), max: 100 },
+            'seekers': { name: "Legion", desc: "Total Seekers", unit: "Seekers", val: s => Object.values(s.seekers).reduce((a,b)=>a+b.count,0), req: lv => 50 * Math.pow(2, lv), max: 100 },
+            'research': { name: "Scholar", desc: "Research Upgrades", unit: "Levels", val: s => Object.values(s.research).reduce((a,b)=>a+b.lv, 0), req: lv => 10 * (lv+1), max: 100 },
+            'dim': { name: "Ascended", desc: "Ascend Dimensions", unit: "Dims", val: s => s.dimIndex, req: lv => lv+1, max: 100 },
+            'anomalies': { name: "Observer", desc: "Pop Anomalies", unit: "Pops", val: s => s.stats.anomalies, req: lv => 5 * Math.pow(3, lv), max: 100 },
+            'frenzy': { name: "Overclocked", desc: "Trigger Frenzies", unit: "Frenzies", val: s => s.stats.frenzies, req: lv => 1 * Math.pow(2, lv), max: 100 },
+            'void': { name: "Dark Matter", desc: "Extract Void Matter", unit: "VM", val: s => s.stats.totalVoid, req: lv => 10 * Math.pow(5, lv), max: 100 },
+            'meta': { name: "Architect", desc: "Void Upgrades", unit: "Upgrades", val: s => Object.values(s.metaSkills).reduce((a,b)=>a+b.lv,0), req: lv => lv+1, max: 100 },
+            'ritual': { name: "Cultist", desc: "Cast Rituals", unit: "Casts", val: s => s.stats.rituals, req: lv => 2 * Math.pow(3, lv), max: 100 },
+            'constraint': { name: "Masochist", desc: "Break Constraints", unit: "Broken", val: s => s.completedConstraints.length, req: lv => lv+1, max: 10 }
+        };
+
+        // Constraints (Challenges)
+        const constraintDefs = {
+            'fragile': { name: "Fragile Geometry", desc: "Research upgrades cannot be purchased or activated. Reaching Dim 3 grants +50% global yield." },
+            'stagnant': { name: "Stagnant Aether", desc: "Passive generation and Seekers yield 0 Aether. Reaching Dim 3 grants +50% global yield." }
+        };
+
         // 3. CORE STATE & VARIABLES
         const state = {
             aether: 0, totalAether: 0, lifetimeAether: 0, voidMatter: 0, dimIndex: 0, lastSaveTime: Date.now(),
             combo: 1.0, lastClickTime: 0, overdriveUntil: 0,
             prestige: 1, clickPower: 1, critChance: 0, passiveGen: 0, artifactMult: 1,
+            stats: { clicks: 0, anomalies: 0, rituals: 0, frenzies: 0, totalVoid: 0, singularities: 0 },
+            theoremLevels: {},
+            activeBuffs: { frenzy: 0, convergence: 0 },
+            activeConstraint: null,
+            completedConstraints: [],
+            singularityShards: 0,
+            singularityUpgrades: {
+                echo: { lv: 0, cost: 1, name: "Aetheric Echo", desc: "+1000% Global Yield multiplier per level." },
+                catalyst: { lv: 0, cost: 2, name: "Void Catalyst", desc: "Base Void Matter gains increased by +50% per level." },
+                warp: { lv: 0, cost: 3, name: "Dimensional Warp", desc: "Ascension goals reduced by 10% per level." },
+                resonance: { lv: 0, cost: 5, name: "Theorem Resonance", desc: "Theorems grant +1.5% Global Yield instead of +1% per level." }
+            },
             metaSkills: {
-                clickPow: { lv: 0, cost: 1, name: "Kinetic Resonance", desc: "+100% Base Click Power per level." },
-                passPow: { lv: 0, cost: 2, name: "Void Automation", desc: "+100% Passive Yield per level." },
-                synergy: { lv: 0, cost: 5, name: "Geometric Synergy", desc: "Drifters boost all other seekers by 0.5% per Drifter per level." }
+                clickPow: { lv: 0, cost: baseMetaCosts[0], name: "Kinetic Resonance", desc: "+100% Base Click Power per level.", req: null },
+                passPow: { lv: 0, cost: baseMetaCosts[1], name: "Void Automation", desc: "+100% Passive Yield per level.", req: 'clickPow' },
+                synergy: { lv: 0, cost: baseMetaCosts[2], name: "Geometric Synergy", desc: "Drifters boost all other seekers by 0.5% per Drifter per level.", req: 'passPow' },
+                anomalyFreq: { lv: 0, cost: baseMetaCosts[3], name: "Probability Warp", desc: "+20% Anomaly spawn rate.", req: 'clickPow' },
+                anomalyPow: { lv: 0, cost: baseMetaCosts[4], name: "Event Horizon", desc: "Anomalies are 50% more effective.", req: 'anomalyFreq' }
             },
             seekers: seekersData, research: researchData, rituals: ritualData, artifacts: artifactData,
             dialoguesShown: []
@@ -461,50 +632,17 @@
                     let artMult = 1;
                     Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
 
-                    addAether(this.config.yield * state.prestige * artMult * mult);
+                    let rate = this.config.yield * state.prestige * artMult * mult;
+                    if(state.activeConstraint === 'stagnant') rate = 0; 
+
+                    if (rate > 0) addAether(rate);
                     this.mesh.scale.set(1.5, 1.5, 1.5);
                     setTimeout(() => this.mesh.scale.set(1, 1, 1), 100);
                 }
             }
         }
 
-        // 7. FIREBASE & CLOUD SAVE
-        const firebaseConfigParams = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-        window.appFb = null; window.authFb = null; window.dbFb = null;
-        try {
-            window.appFb = initializeApp(JSON.parse(firebaseConfigParams));
-            window.authFb = getAuth(window.appFb);
-            window.dbFb = getFirestore(window.appFb);
-        } catch (e) { console.log("Firebase not initialized", e); }
-        
-        const appIdStr = typeof __app_id !== 'undefined' ? __app_id : 'aether-protocol';
-        window.currentUser = null;
-
-        const initAuthData = async () => {
-            if (!window.authFb) {
-                const mod = document.getElementById('tutorial-modal');
-                if(mod) mod.classList.remove('hidden');
-                return;
-            }
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try { await signInWithCustomToken(window.authFb, __initial_auth_token); } catch(e) { console.error(e); }
-            } else {
-                try { await signInAnonymously(window.authFb); } catch(e) { console.error(e); }
-            }
-        };
-
-        if (window.authFb) {
-            onAuthStateChanged(window.authFb, async (user) => {
-                if (user) {
-                    window.currentUser = user;
-                    await loadGameFromCloud();
-                    const mod = document.getElementById('tutorial-modal');
-                    if(mod) mod.classList.remove('hidden');
-                }
-            });
-        }
-        initAuthData();
-
+        // 7. LOCAL STORAGE & EXPORT
         function rebuildVisuals() {
             window.activeSeekerMeshes.forEach(s => {
                 scene.remove(s.mesh);
@@ -524,14 +662,22 @@
             });
         }
 
-        async function loadGameFromCloud() {
-            if (!window.currentUser || !window.dbFb) return;
+        function getTheoremPower() {
+            return 0.01 + (state.singularityUpgrades.resonance.lv * 0.005);
+        }
+
+        function getTotalTheorems() {
+            if(!state.theoremLevels) return 0;
+            return Object.values(state.theoremLevels).reduce((a,b)=>a+b, 0);
+        }
+
+        window.loadGameFromLocal = function() {
             try {
-                const docSnap = await getDoc(doc(window.dbFb, 'artifacts', appIdStr, 'users', window.currentUser.uid, 'savedata', 'game'));
-                if (docSnap.exists()) {
-                    const data = JSON.parse(docSnap.data().state);
+                const saved = localStorage.getItem('aether_save');
+                if (saved) {
+                    const data = JSON.parse(saved);
                     Object.keys(data).forEach(k => {
-                        if (k === 'activeSeekers' || k === 'clickAnimations' || k === 'anomaly' || k === 'dialoguesShown') return;
+                        if (k === 'activeSeekers' || k === 'clickAnimations' || k === 'anomaly' || k === 'dialoguesShown' || k === 'unlockedTheorems') return;
                         if (Array.isArray(data[k])) {
                             state[k] = data[k];
                         } else if(typeof state[k] === 'object' && state[k] !== null) {
@@ -543,7 +689,22 @@
                         }
                     });
 
-                    // Safeguard
+                    // Safeguards & Migrations
+                    if (!state.stats) state.stats = { clicks: 0, anomalies: 0, rituals: 0, frenzies: 0, totalVoid: 0, singularities: 0 };
+                    if (state.stats.singularities === undefined) state.stats.singularities = 0;
+                    if (!state.singularityShards) state.singularityShards = 0;
+                    if (!state.singularityUpgrades) state.singularityUpgrades = {
+                        echo: { lv: 0, cost: 1, name: "Aetheric Echo", desc: "+1000% Global Yield multiplier per level." },
+                        catalyst: { lv: 0, cost: 2, name: "Void Catalyst", desc: "Base Void Matter gains increased by +50% per level." },
+                        warp: { lv: 0, cost: 3, name: "Dimensional Warp", desc: "Ascension goals reduced by 10% per level." },
+                        resonance: { lv: 0, cost: 5, name: "Theorem Resonance", desc: "Theorems grant +1.5% Global Yield instead of +1% per level." }
+                    };
+                    
+                    if (!state.theoremLevels) state.theoremLevels = {};
+                    if (!state.activeBuffs) state.activeBuffs = { frenzy: 0, convergence: 0 };
+                    if (!state.completedConstraints) state.completedConstraints = [];
+                    if (state.activeConstraint === undefined) state.activeConstraint = null;
+
                     if (isNaN(state.aether) || !state.aether) state.aether = 0;
                     if (isNaN(state.totalAether) || !state.totalAether) state.totalAether = 0;
                     if (isNaN(state.lifetimeAether) || !state.lifetimeAether) state.lifetimeAether = 0;
@@ -569,22 +730,62 @@
                         }
                     }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Error loading save", e); }
+            
+            const mod = document.getElementById('tutorial-modal');
+            const offMod = document.getElementById('offline-modal');
+            if(mod && (!offMod || offMod.classList.contains('hidden'))) {
+                mod.classList.remove('hidden');
+            }
         }
+        window.loadGameFromLocal();
 
-        window.saveGameToCloud = async function() {
-            if (!window.currentUser || !window.dbFb) return;
+        window.saveGameToLocal = function() {
             state.lastSaveTime = Date.now();
             try { 
                 const saveState = { ...state };
                 delete saveState.activeSeekers;
                 delete saveState.clickAnimations;
                 delete saveState.anomaly;
-                await setDoc(doc(window.dbFb, 'artifacts', appIdStr, 'users', window.currentUser.uid, 'savedata', 'game'), { state: JSON.stringify(saveState) }); 
+                localStorage.setItem('aether_save', JSON.stringify(saveState)); 
             } 
-            catch (e) { console.error(e); }
+            catch (e) { console.error("Error saving", e); }
         }
-        setInterval(window.saveGameToCloud, 10000);
+        setInterval(window.saveGameToLocal, 10000);
+
+        window.exportSave = function() {
+            const saveState = { ...state };
+            delete saveState.activeSeekers;
+            delete saveState.clickAnimations;
+            delete saveState.anomaly;
+            const str = btoa(JSON.stringify(saveState));
+            const textArea = document.createElement("textarea");
+            textArea.value = str;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const btn = document.getElementById('btn-export');
+                if(btn) {
+                    btn.innerText = "COPIED TO CLIPBOARD!";
+                    setTimeout(() => btn.innerText = "EXPORT SAVE DATA", 2000);
+                }
+            } catch (err) { console.error('Fallback: Oops, unable to copy', err); }
+            document.body.removeChild(textArea);
+        };
+
+        window.importSave = function() {
+            const str = prompt("Paste your exported save string here:");
+            if (str) {
+                try {
+                    const data = JSON.parse(atob(str));
+                    if (data && typeof data === 'object') {
+                        localStorage.setItem('aether_save', JSON.stringify(data));
+                        location.reload();
+                    }
+                } catch(e) { alert("Invalid save string!"); }
+            }
+        };
 
         // 8. GAME ACTIONS & DOM MANIPULATION
         window.startGame = function() {
@@ -608,6 +809,8 @@
         }
 
         function calculatePassiveRate() {
+            if (state.activeConstraint === 'stagnant') return 0; // Constraint Check
+
             let base = 0;
             Object.keys(state.research).forEach(k => { if(state.research[k].type === 'passive' && state.research[k].lv > 0) base += 50 * Math.pow(2, state.research[k].lv); });
             Object.keys(state.seekers).forEach(k => base += state.seekers[k].count * state.seekers[k].yield);
@@ -620,8 +823,66 @@
             let artMult = 1;
             Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
             
-            return base * voidMult * synergy * ritualMult * state.prestige * artMult;
+            // Theorems and Buffs
+            const theoremMult = 1 + (getTotalTheorems() * getTheoremPower());
+            const frenzyMult = state.activeBuffs.frenzy > Date.now() ? 7 : 1;
+            const challengeMult = 1 + (state.completedConstraints.length * 0.5);
+            const singMult = 1 + (state.singularityUpgrades.echo.lv * 10.0); // 1000% per level
+
+            return base * voidMult * synergy * ritualMult * state.prestige * artMult * theoremMult * frenzyMult * challengeMult * singMult;
         }
+
+        function getSingularityGain() {
+            return Math.floor(Math.pow(Math.max(0, state.dimIndex - 3), 1.5));
+        }
+
+        window.triggerSingularity = async function() {
+            const gain = getSingularityGain();
+            if (gain < 1) return;
+            if (!confirm(`WARNING: This will trigger a Singularity.\n\nYou will lose ALL Aether, Seekers, Research, Void Matter, Meta Skills, Rituals, Artifacts, and Theorems.\n\nYou will gain ${gain} Singularity Shards.\n\nProceed?`)) return;
+
+            // Visuals
+            document.body.style.pointerEvents = 'none';
+            const vig = document.getElementById('buff-vignette');
+            if(vig) { vig.className = 'vignette-singularity'; }
+            
+            state.singularityShards += gain;
+            state.stats.singularities++;
+
+            // Reset state
+            state.aether = 0; state.totalAether = 0; state.lifetimeAether = 0;
+            state.voidMatter = 0; state.dimIndex = 0;
+            state.combo = 1.0; state.prestige = 1; state.clickPower = 1; state.critChance = 0;
+            state.theoremLevels = {}; state.completedConstraints = []; state.activeConstraint = null;
+            state.stats.clicks = 0; state.stats.anomalies = 0; state.stats.rituals = 0; state.stats.frenzies = 0; state.stats.totalVoid = 0;
+
+            // Reset Objects
+            Object.keys(state.seekers).forEach(k => { state.seekers[k].count = 0; state.seekers[k].cost = baseSeekerCosts[parseInt(k.split('_')[1])]; });
+            Object.keys(state.research).forEach(k => { state.research[k].lv = 0; state.research[k].cost = baseResCosts[parseInt(k.split('_')[1])]; });
+            Object.keys(state.metaSkills).forEach((k, idx) => { state.metaSkills[k].lv = 0; state.metaSkills[k].cost = baseMetaCosts[idx]; }); 
+            Object.keys(state.artifacts).forEach(k => { state.artifacts[k].owned = false; });
+            Object.keys(state.rituals).forEach(k => { state.rituals[k].lastUsed = 0; });
+
+            window.activeSeekerMeshes.forEach(s => { scene.remove(s.mesh); });
+            window.activeSeekerMeshes.length = 0;
+
+            for(let i=0; i<80; i++) { 
+                monolith.rotation.y += 0.2 * (i/10); 
+                monolith.scale.multiplyScalar(0.9);
+                camera.position.z -= 0.1; 
+                await new Promise(r => setTimeout(r, 16)); 
+            }
+            
+            buildCards(); updateTheme(); window.setTab('seekers'); updateUI();
+            
+            for(let i=0; i<40; i++) { 
+                camera.position.z += 0.2; 
+                await new Promise(r => setTimeout(r, 16)); 
+            }
+            
+            document.body.style.pointerEvents = 'auto';
+            if(vig) vig.className = '';
+        };
 
         function buildCards() {
             let html = '';
@@ -633,7 +894,7 @@
                         <div class="flex items-center gap-3"><div class="w-6 h-6 flex-shrink-0">${getShapeSVG(s.geometry, s.color)}</div><span class="text-[11px] font-bold uppercase">${s.name}</span></div>
                         <span class="text-xs opacity-50" id="count-${k}">${s.count}</span>
                     </div>
-                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${s.lore}</p><p class="text-[10px] font-bold text-sky-200 mb-4">Mechanic: ${s.mechanic}</p><button id="buy-${k}" onclick="window.buySeeker('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Summon [<span id="cost-${k}">${fNum(s.cost)}</span>]</button></div></div>`;
+                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${s.lore}</p><p class="text-[10px] font-bold text-sky-200 mb-4">Mechanic: ${s.mechanic}</p><button id="buy-${k}" onclick="window.buySeeker('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Summon</button></div></div>`;
             });
             const seekPanel = document.getElementById('panel-seekers');
             if(seekPanel) seekPanel.innerHTML = html;
@@ -645,7 +906,7 @@
                 const c = {'click':'text-emerald-400', 'crit':'text-amber-400', 'passive':'text-blue-400', 'auto':'text-pink-400', 'speed':'text-indigo-400'}[r.type];
                 html += `<div id="card-res-${k}" class="expandable-card p-6 cursor-pointer ${hiddenCls}" onclick="this.classList.toggle('active')">
                     <div class="flex justify-between items-center"><span class="text-[11px] font-bold uppercase ${c}">${r.name}</span><span class="text-xs opacity-50" id="lv-res-${k}">LV.${r.lv}</span></div>
-                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${r.lore}</p><p class="text-[10px] font-bold ${c.replace('400','200')} mb-4">Mechanic: ${r.mechanic}</p><button id="btn-res-${k}" onclick="window.buyResearch('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Research [<span id="cost-res-${k}">${fNum(r.cost)}</span>]</button></div></div>`;
+                    <div class="mt-8"><p class="text-[10px] opacity-60 mb-4">${r.lore}</p><p class="text-[10px] font-bold ${c.replace('400','200')} mb-4">Mechanic: ${r.mechanic}</p><button id="btn-res-${k}" onclick="window.buyResearch('${k}', event)" class="btn-black w-full py-4 rounded-xl text-[11px] font-bold uppercase">Research</button></div></div>`;
             });
             const resPanel = document.getElementById('panel-research');
             if(resPanel) resPanel.innerHTML = html;
@@ -653,7 +914,7 @@
             html = '';
             Object.keys(state.rituals).forEach(k => {
                 const r = state.rituals[k];
-                const hiddenCls = state.dimIndex < r.unlockDim ? 'hidden' : ''; // Tied to Dimensions
+                const hiddenCls = state.dimIndex < r.unlockDim ? 'hidden' : ''; 
                 const c = r.type === 'surge' ? 'text-cyan-400' : 'text-rose-500';
                 html += `<div id="card-rit-${k}" class="expandable-card p-6 cursor-pointer ${hiddenCls}" onclick="this.classList.toggle('active')">
                     <div class="flex justify-between items-center"><span class="text-[11px] font-bold uppercase ${c}">${r.name}</span><span class="text-[10px] font-bold opacity-50 bg-white/10 px-2 py-1 rounded" id="cd-${k}">READY</span></div>
@@ -662,12 +923,20 @@
             const ritPanel = document.getElementById('panel-rituals');
             if(ritPanel) ritPanel.innerHTML = html;
 
+            // VOID WEB (Skill Tree)
             html = '';
             Object.keys(state.metaSkills).forEach(k => {
                 const s = state.metaSkills[k];
-                html += `<div class="p-6 rounded-xl border border-fuchsia-400/20 bg-fuchsia-400/5 mb-3">
+                const reqMet = !s.req || state.metaSkills[s.req].lv > 0;
+                const opacity = reqMet ? 'opacity-100' : 'opacity-40';
+                const lockTxt = reqMet ? '' : `<span class="text-red-400 block mt-1 text-[8px] uppercase tracking-widest">Requires ${state.metaSkills[s.req].name}</span>`;
+                
+                html += `<div class="p-6 rounded-xl border border-fuchsia-400/20 bg-fuchsia-400/5 mb-3 transition-all ${opacity}">
                     <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold uppercase text-fuchsia-400">${s.name}</span><span class="text-[10px] opacity-50" id="lv-meta-${k}">LV.${s.lv}</span></div>
-                    <p class="text-[10px] opacity-60 mb-3">${s.desc}</p><button id="btn-meta-${k}" onclick="window.buyMeta('${k}')" class="btn-black w-full py-3 rounded-lg text-[10px] font-bold uppercase" ${state.voidMatter<s.cost?'disabled':''}>Upgrade [${s.cost} VM]</button></div>`;
+                    <p class="text-[10px] opacity-60 mb-3">${s.desc}</p>
+                    <button id="btn-meta-${k}" onclick="window.buyMeta('${k}')" class="btn-black w-full py-3 rounded-lg text-[10px] font-bold uppercase" ${!reqMet ? 'disabled' : ''}>Upgrade</button>
+                    ${lockTxt}
+                </div>`;
             });
             html += `<div class="my-6 border-t border-white/10"></div><p class="text-[10px] uppercase tracking-widest opacity-50 mb-4 text-center">Discovered Artifacts</p>`;
             Object.keys(state.artifacts).forEach(k => {
@@ -681,22 +950,85 @@
             });
             const vsCont = document.getElementById('void-skills-container');
             if(vsCont) vsCont.innerHTML = html;
+
+            // THEOREMS GRID (Dynamic Scaling)
+            html = '';
+            if(!state.theoremLevels) state.theoremLevels = {};
+            Object.keys(theoremDefs).forEach(k => {
+                const t = theoremDefs[k];
+                const level = state.theoremLevels[k] || 0;
+                html += `<div class="theorem-badge ${level > 0 ? 'unlocked' : ''} group" title="${t.name}: ${t.desc}">
+                    <div class="absolute inset-0 bg-black/90 p-2 flex flex-col items-center justify-center text-center opacity-0 group-hover:opacity-100 transition-opacity z-10 rounded-lg">
+                        <span class="text-[8px] font-bold text-emerald-400 mb-1">${t.name} Lv.${level}</span>
+                        <span class="text-[7px] leading-tight opacity-70">${level >= t.max ? 'MAX LEVEL' : `Next: ${fNum(t.req(level))} ${t.unit}`}</span>
+                    </div>
+                    <div class="flex flex-col items-center pointer-events-none">
+                        ${level > 0 ? `<span class="text-emerald-400 font-bold text-[12px] mb-1">Lv.${level}</span>` 
+                                    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-20 mb-1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`}
+                        <span class="text-[7px] uppercase tracking-widest opacity-50">${t.name}</span>
+                    </div>
+                </div>`;
+            });
+            const thCont = document.getElementById('theorems-grid');
+            if(thCont) thCont.innerHTML = html;
+
+            // CONSTRAINTS LIST
+            html = '';
+            Object.keys(constraintDefs).forEach(k => {
+                const c = constraintDefs[k];
+                const active = state.activeConstraint === k;
+                const completed = state.completedConstraints.includes(k);
+                const bg = active ? 'bg-red-500/20 border-red-500/50' : completed ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/10';
+                
+                html += `<div class="p-6 rounded-xl border ${bg} mb-3 text-center">
+                    <h4 class="text-[11px] font-bold uppercase ${completed?'text-emerald-400':active?'text-red-400':'text-white'} mb-2">${c.name} ${completed?'(COMPLETED)':''}</h4>
+                    <p class="text-[10px] opacity-60 mb-4">${c.desc}</p>
+                    <button onclick="window.bindConstraint('${k}')" class="btn-black w-full py-3 rounded-lg text-[10px] font-bold uppercase" ${active||completed?'disabled':''}>${active?'BINDED':'Bind Constraint'}</button>
+                </div>`;
+            });
+            const cnCont = document.getElementById('constraints-container');
+            if(cnCont) cnCont.innerHTML = html;
+
+            // SINGULARITY UPGRADES
+            html = '';
+            Object.keys(state.singularityUpgrades).forEach(k => {
+                const u = state.singularityUpgrades[k];
+                html += `<div class="p-6 rounded-xl border border-amber-400/20 bg-amber-400/5 mb-3 transition-all">
+                    <div class="flex justify-between items-center mb-2"><span class="text-[11px] font-bold uppercase text-amber-400">${u.name}</span><span class="text-[10px] opacity-50" id="lv-sing-${k}">LV.${u.lv}</span></div>
+                    <p class="text-[10px] opacity-60 mb-3">${u.desc}</p>
+                    <button id="btn-sing-${k}" onclick="window.buySingularity('${k}')" class="btn-black w-full py-3 rounded-lg text-[10px] font-bold uppercase">Upgrade</button>
+                </div>`;
+            });
+            const singCont = document.getElementById('singularity-skills-container');
+            if(singCont) singCont.innerHTML = html;
         }
 
         function updateUI() {
             setTxt('aether-count', fNum(state.aether));
             setTxt('void-display', state.voidMatter);
             setTxt('vm-count', state.voidMatter);
+            setTxt('shard-display', state.singularityShards);
+            setTxt('shard-count', state.singularityShards);
             
             const tabResearch = document.getElementById('tab-research');
             const tabRituals = document.getElementById('tab-rituals');
             const tabVoid = document.getElementById('tab-void');
+            const tabConstraints = document.getElementById('tab-constraints');
+            const tabSingularity = document.getElementById('tab-singularity');
+            const singDisplay = document.getElementById('singularity-display');
 
             if (state.lifetimeAether >= 50 && tabResearch) tabResearch.classList.remove('hidden');
-            if (state.dimIndex >= 1 && tabRituals) tabRituals.classList.remove('hidden'); // rituals at Dim 1+
+            if (state.dimIndex >= 1 && tabRituals) tabRituals.classList.remove('hidden'); 
             if (state.dimIndex >= 1 && tabVoid) tabVoid.classList.remove('hidden');
+            if (state.dimIndex >= 4 && tabConstraints) tabConstraints.classList.remove('hidden'); 
+            
+            if ((state.dimIndex >= 4 || state.stats.singularities > 0) && tabSingularity) {
+                tabSingularity.classList.remove('hidden');
+                if(singDisplay && state.stats.singularities > 0) singDisplay.classList.remove('hidden');
+            }
 
-            const goal = dimensions[state.dimIndex].goal;
+            const baseGoal = dimensions[state.dimIndex].goal;
+            const goal = baseGoal * Math.pow(0.9, state.singularityUpgrades.warp.lv); // Dimensional Warp affects goal
             const prog = Math.min(100, (state.totalAether / goal) * 100);
             
             const progressEl = document.getElementById('ascend-progress');
@@ -708,58 +1040,86 @@
 
             if (prog >= 100) {
                 if(btnAscend) btnAscend.disabled = false;
-                const vmGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
-                setTxt('ascend-reward-preview', `Grants +${vmGain} Void Matter`);
+                const vmBaseGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
+                const vmGain = Math.floor(vmBaseGain * (1 + (state.singularityUpgrades.catalyst.lv * 0.5))); // Void Catalyst affects gain
+                let txt = `Grants +${vmGain} Void Matter`;
+                if(state.activeConstraint !== null && state.dimIndex >= 2) txt += `\nConstraint Broken: +50% Global Yield!`;
+                setTxt('ascend-reward-preview', txt);
                 if(ascPreview) ascPreview.style.opacity = 1;
             } else {
                 if(btnAscend) btnAscend.disabled = true;
                 if(ascPreview) ascPreview.style.opacity = 0;
             }
 
-            let r = 0;
-            Object.keys(state.research).forEach(k => { if(state.research[k].type === 'passive' && state.research[k].lv > 0) r += 50 * Math.pow(2, state.research[k].lv); });
+            let r = calculatePassiveRate(); 
 
+            // Evaluate Seekers
             Object.keys(state.seekers).forEach(k => {
                 const s = state.seekers[k]; 
-                r += s.count * s.yield;
                 const el = document.getElementById(`card-${k}`);
                 if(el) {
                     if (state.lifetimeAether >= s.unlockReq) el.classList.remove('hidden');
-                    setTxt(`cost-${k}`, fNum(s.cost));
+                    const info = getBulkInfo(s.cost, 1.25, state.aether, window.buyMode);
                     setTxt(`count-${k}`, s.count);
                     const buyBtn = document.getElementById(`buy-${k}`);
-                    if(buyBtn) buyBtn.disabled = state.aether < s.cost;
+                    if(buyBtn) {
+                        buyBtn.disabled = state.aether < info.cost || info.amount === 0;
+                        const dspAmt = info.amount > 0 ? info.amount : window.buyMode === 'max' ? 1 : window.buyMode;
+                        buyBtn.innerText = `Summon ${dspAmt}x [${fNum(info.cost)}]`;
+                    }
                 }
             });
             
+            // Evaluate Research
             Object.keys(state.research).forEach(k => {
                 const res = state.research[k]; 
                 const el = document.getElementById(`card-res-${k}`);
                 if(el) {
                     if (state.lifetimeAether >= res.unlockReq) el.classList.remove('hidden');
-                    setTxt(`cost-res-${k}`, fNum(res.cost));
+                    const info = getBulkInfo(res.cost, 2.5, state.aether, window.buyMode);
                     setTxt(`lv-res-${k}`, `LV.${res.lv}`);
                     const btnResEl = document.getElementById(`btn-res-${k}`);
-                    if(btnResEl) btnResEl.disabled = state.aether < res.cost;
+                    if(btnResEl) {
+                        btnResEl.disabled = state.aether < info.cost || info.amount === 0 || state.activeConstraint === 'fragile';
+                        const dspAmt = info.amount > 0 ? info.amount : window.buyMode === 'max' ? 1 : window.buyMode;
+                        btnResEl.innerText = state.activeConstraint === 'fragile' ? 'LOCKED BY CONSTRAINT' : `Research ${dspAmt}x [${fNum(info.cost)}]`;
+                    }
                 }
             });
 
+            // Evaluate MetaSkills
             Object.keys(state.metaSkills).forEach(k => {
                 const s = state.metaSkills[k];
                 const btn = document.getElementById(`btn-meta-${k}`);
+                const info = getBulkInfo(s.cost, 1.8, state.voidMatter, window.buyMode);
+                const reqMet = !s.req || state.metaSkills[s.req].lv > 0;
                 if(btn) {
-                    btn.disabled = state.voidMatter < s.cost;
-                    btn.innerText = `Upgrade [${s.cost} VM]`;
+                    btn.disabled = !reqMet || state.voidMatter < info.cost || info.amount === 0;
+                    const dspAmt = info.amount > 0 ? info.amount : window.buyMode === 'max' ? 1 : window.buyMode;
+                    btn.innerText = `Upgrade ${dspAmt}x [${fNum(info.cost)} VM]`;
                 }
                 setTxt(`lv-meta-${k}`, `LV.${s.lv}`);
             });
 
-            const now = Date.now()/1000;
+            // Evaluate Singularity Upgrades
+            Object.keys(state.singularityUpgrades).forEach(k => {
+                const u = state.singularityUpgrades[k];
+                const btn = document.getElementById(`btn-sing-${k}`);
+                const info = getBulkInfo(u.cost, 2.0, state.singularityShards, window.buyMode);
+                if(btn) {
+                    btn.disabled = state.singularityShards < info.cost || info.amount === 0;
+                    const dspAmt = info.amount > 0 ? info.amount : window.buyMode === 'max' ? 1 : window.buyMode;
+                    btn.innerText = `Upgrade ${dspAmt}x [${fNum(info.cost)} Shards]`;
+                }
+                setTxt(`lv-sing-${k}`, `LV.${u.lv}`);
+            });
+
+            const now = Date.now();
             Object.keys(state.rituals).forEach(k => {
                 const rit = state.rituals[k]; const el = document.getElementById(`card-rit-${k}`);
                 if(el) {
                     if (state.dimIndex >= rit.unlockDim) el.classList.remove('hidden');
-                    const passed = now - rit.lastUsed; const btn = document.getElementById(`btn-rit-${k}`);
+                    const passed = (now/1000) - rit.lastUsed; const btn = document.getElementById(`btn-rit-${k}`);
                     if(btn) {
                         if (passed < rit.cooldown) {
                             btn.disabled = true; btn.innerText = `CHARGING...`;
@@ -772,26 +1132,63 @@
                 }
             });
 
-            Object.keys(state.artifacts).forEach(k => {
-                const a = state.artifacts[k]; const el = document.getElementById(`card-art-${k}`);
-                if(el && state.dimIndex >= a.unlockDim) {
-                    el.classList.remove('hidden');
-                    if(a.owned) { 
-                        el.classList.add('bg-amber-400/20'); 
-                        setTxt(`status-art-${k}`, "ACTIVE");
-                    }
-                }
-            });
+            // Active Buff Indicators
+            let buffHtml = '';
+            const vigEl = document.getElementById('buff-vignette');
+            let vigClasses = [];
+            
+            if (state.activeBuffs.frenzy > now) {
+                buffHtml += `<div class="buff-tag bg-orange-500/20 text-orange-400 border border-orange-500">FRENZY (x7)</div>`;
+                vigClasses.push('vignette-frenzy');
+            }
+            if (state.activeBuffs.convergence > now) {
+                buffHtml += `<div class="buff-tag bg-red-500/20 text-red-400 border border-red-500">CONVERGENCE (x100)</div>`;
+                vigClasses.push('vignette-convergence');
+            }
+            if (state.overdriveUntil > now) {
+                vigClasses.push('overdrive-active');
+            }
+            
+            const buffCont = document.getElementById('buff-indicators');
+            if(buffCont) buffCont.innerHTML = buffHtml;
+            if(vigEl && !vigEl.classList.contains('vignette-singularity')) vigEl.className = vigClasses.join(' ');
+
 
             setTxt('pop-count', window.activeSeekerMeshes.length);
-            let artMult = 1; Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
-            setTxt('mult-count', fNum(state.prestige * artMult) + 'x');
             
-            const voidMult = 1 + state.metaSkills.passPow.lv;
-            const synergy = getSynergyMult();
-            let ritualMult = 1;
-            Object.keys(state.rituals).forEach(k => { if (state.rituals[k].type === 'cascade' && Date.now()/1000 < state.rituals[k].activeUntil) ritualMult *= state.rituals[k].power; });
-            setTxt('aether-rate', fNum(r * voidMult * synergy * ritualMult * state.prestige * artMult));
+            let artMult = 1; Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+            const theoremMult = 1 + (getTotalTheorems() * getTheoremPower());
+            const challengeMult = 1 + (state.completedConstraints.length * 0.5);
+            const singMult = 1 + (state.singularityUpgrades.echo.lv * 10.0);
+            
+            setTxt('mult-count', fNum(state.prestige * artMult * theoremMult * challengeMult * singMult) + 'x');
+            setTxt('aether-rate', fNum(r));
+            setTxt('theorems-total-text', `+${fNum(getTotalTheorems() * getTheoremPower() * 100)}% Compounding Yield (Total Levels)`);
+            
+            const singGain = getSingularityGain();
+            setTxt('singularity-gain-text', `Yields +${singGain} Shard${singGain !== 1 ? 's' : ''}`);
+            const btnCollapse = document.getElementById('btn-collapse');
+            if(btnCollapse) btnCollapse.disabled = singGain < 1;
+
+            // Periodically evaluate and level up theorems
+            if(!state.theoremLevels) state.theoremLevels = {};
+            let leveledUp = false;
+            Object.keys(theoremDefs).forEach(k => {
+                const t = theoremDefs[k];
+                if (state.theoremLevels[k] === undefined) state.theoremLevels[k] = 0;
+                let lv = state.theoremLevels[k];
+                
+                while (lv < t.max && t.val(state) >= t.req(lv)) {
+                    lv++;
+                    state.theoremLevels[k] = lv;
+                    leveledUp = true;
+                    
+                    setTxt('vertex-text', `Theorem Expanded: ${t.name} reached Level ${lv}. The geometry shifts to accommodate the new truth.`);
+                    const guide = document.getElementById('vertex-guide');
+                    if(guide) guide.classList.add('visible');
+                }
+            });
+            if (leveledUp) buildCards(); // Re-render grid if levels changed
         }
 
         function addAether(v) {
@@ -815,8 +1212,22 @@
             const tr = document.getElementById('tab-roadmap');
             if (isMenuOpen && tr && tr.classList.contains('active')) setTimeout(() => { const activeNode = document.querySelector('.roadmap-node.active'); if(activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
         };
+
+        window.toggleSystem = () => {
+            const mod = document.getElementById('system-modal');
+            if(mod) {
+                if(mod.classList.contains('hidden')) {
+                    mod.classList.remove('hidden');
+                    mod.classList.add('flex');
+                } else {
+                    mod.classList.add('hidden');
+                    mod.classList.remove('flex');
+                }
+            }
+        };
+
         window.setTab = (t) => {
-            ['seekers', 'research', 'rituals', 'void', 'roadmap'].forEach(p => { 
+            ['seekers', 'research', 'rituals', 'void', 'theorems', 'constraints', 'singularity', 'roadmap'].forEach(p => { 
                 const pEl = document.getElementById('panel-'+p);
                 const tEl = document.getElementById('tab-'+p);
                 if(pEl) pEl.classList.add('hidden'); 
@@ -828,30 +1239,112 @@
             if(ntEl) ntEl.classList.add('active');
             if (t === 'roadmap') setTimeout(() => { const activeNode = document.querySelector('.roadmap-node.active'); if(activeNode) activeNode.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
         };
-        window.buySeeker = (k, e) => { e.stopPropagation(); const s = state.seekers[k]; if(state.aether >= s.cost) { state.aether -= s.cost; s.count++; s.cost *= 1.25; window.activeSeekerMeshes.push(new SeekerUnit(k)); updateUI(); } };
-        window.buyResearch = (k, e) => { e.stopPropagation(); const r = state.research[k]; if(state.aether >= r.cost) { state.aether -= r.cost; r.lv++; r.cost *= 2.5; if(r.type === 'click') state.clickPower *= 2; if(r.type === 'crit') state.critChance = Math.min(0.5, state.critChance + 0.05); updateUI(); } };
-        window.buyMeta = (k) => { const s = state.metaSkills[k]; if(state.voidMatter >= s.cost) { state.voidMatter -= s.cost; s.lv++; s.cost = Math.floor(s.cost * 1.8); buildCards(); updateUI(); } };
+        
+        window.buySeeker = (k, e) => { 
+            e.stopPropagation(); 
+            const s = state.seekers[k]; 
+            const info = getBulkInfo(s.cost, 1.25, state.aether, window.buyMode);
+            if(info.amount > 0 && state.aether >= info.cost) { 
+                state.aether -= info.cost; 
+                s.count += info.amount; 
+                s.cost = s.cost * Math.pow(1.25, info.amount); 
+                let visualsToAdd = Math.min(info.amount, 10); 
+                for(let i=0; i<visualsToAdd; i++) window.activeSeekerMeshes.push(new SeekerUnit(k)); 
+                updateUI(); 
+            } 
+        };
+        
+        window.buyResearch = (k, e) => { 
+            e.stopPropagation(); 
+            if (state.activeConstraint === 'fragile') return; // Enforce constraint
+            const r = state.research[k]; 
+            const info = getBulkInfo(r.cost, 2.5, state.aether, window.buyMode);
+            if(info.amount > 0 && state.aether >= info.cost) { 
+                state.aether -= info.cost; 
+                r.lv += info.amount; 
+                r.cost = r.cost * Math.pow(2.5, info.amount); 
+                if(r.type === 'click') state.clickPower *= Math.pow(2, info.amount); 
+                if(r.type === 'crit') state.critChance = Math.min(0.5, state.critChance + (0.05 * info.amount)); 
+                updateUI(); 
+            } 
+        };
+        
+        window.buyMeta = (k) => { 
+            const s = state.metaSkills[k]; 
+            const reqMet = !s.req || state.metaSkills[s.req].lv > 0;
+            if(!reqMet) return;
+            const info = getBulkInfo(s.cost, 1.8, state.voidMatter, window.buyMode);
+            if(info.amount > 0 && state.voidMatter >= info.cost) { 
+                state.voidMatter -= info.cost; 
+                s.lv += info.amount; 
+                s.cost = s.cost * Math.pow(1.8, info.amount); 
+                buildCards(); 
+                updateUI(); 
+            } 
+        };
+
+        window.buySingularity = (k) => {
+            const u = state.singularityUpgrades[k];
+            const info = getBulkInfo(u.cost, 2.0, state.singularityShards, window.buyMode);
+            if (info.amount > 0 && state.singularityShards >= info.cost) {
+                state.singularityShards -= info.cost;
+                u.lv += info.amount;
+                u.cost = u.cost * Math.pow(2.0, info.amount);
+                buildCards();
+                updateUI();
+            }
+        };
         
         window.castRitual = (k, e) => { 
             e.stopPropagation(); 
             const r = state.rituals[k]; 
             const now = Date.now()/1000; 
             if(now - r.lastUsed >= r.cooldown) { 
-                r.lastUsed = now; 
+                r.lastUsed = now;
+                state.stats.rituals++;
                 if(r.type === 'surge') addAether(calculatePassiveRate() * r.power); 
                 if(r.type === 'cascade') r.activeUntil = now + r.duration; 
                 updateUI(); 
             } 
         };
+
+        window.bindConstraint = (k) => {
+            if(confirm(`Bind the ${constraintDefs[k].name} constraint? This will restart your current run instantly.`)) {
+                state.activeConstraint = k;
+                state.aether = 0; state.totalAether = 0;
+                Object.keys(state.seekers).forEach(k => { state.seekers[k].count = 0; state.seekers[k].cost = baseSeekerCosts[parseInt(k.split('_')[1])]; });
+                Object.keys(state.research).forEach(k => { state.research[k].lv = 0; state.research[k].cost = baseResCosts[parseInt(k.split('_')[1])]; });
+                state.clickPower = 1; state.critChance = 0; state.dimIndex = 0;
+                window.activeSeekerMeshes.forEach(s => { scene.remove(s.mesh); });
+                window.activeSeekerMeshes.length = 0;
+                buildCards(); updateTheme(); updateUI();
+            }
+        };
         
         window.ascend = async () => {
             playAscend();
-            const vmGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
+            triggerShake();
+            const vmBaseGain = Math.max(1, Math.floor(Math.pow(state.totalAether / 1000000, 0.3)));
+            const vmGain = Math.floor(vmBaseGain * (1 + (state.singularityUpgrades.catalyst.lv * 0.5))); // Void Catalyst
+            
             state.voidMatter += vmGain;
+            state.stats.totalVoid += vmGain;
+
+            // Constraint check
+            if (state.activeConstraint !== null && state.dimIndex >= 2) { 
+                if(!state.completedConstraints.includes(state.activeConstraint)) state.completedConstraints.push(state.activeConstraint);
+                state.activeConstraint = null; 
+                setTxt('vertex-text', `Incredible... you survived the simulation's flaws. The geometry repairs itself, leaving a permanent structural enhancement.`);
+                const guide = document.getElementById('vertex-guide');
+                if(guide) guide.classList.add('visible');
+            }
+
             state.dimIndex++; if(state.dimIndex >= dimensions.length) state.dimIndex = dimensions.length - 1;
             Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].unlockDim <= state.dimIndex) state.artifacts[k].owned = true; });
             state.aether = 0; state.totalAether = 0;
-            Object.keys(state.seekers).forEach(k => { state.seekers[k].count = 0; state.seekers[k].cost = 15 * Math.pow(1.8, parseInt(k.split('_')[1])); });
+            
+            // Keep upgrades but reset seekers
+            Object.keys(state.seekers).forEach(k => { state.seekers[k].count = 0; state.seekers[k].cost = baseSeekerCosts[parseInt(k.split('_')[1])]; });
             
             window.activeSeekerMeshes.forEach(s => {
                 scene.remove(s.mesh);
@@ -896,6 +1389,7 @@
             const now = Date.now();
             const isOverdrive = now < state.overdriveUntil;
             if (!isAuto) {
+                state.stats.clicks++;
                 initAudio();
                 if (now - state.lastClickTime < 1000 || isOverdrive) state.combo = Math.min(5.0, state.combo + (isOverdrive ? 0.5 : 0.05));
                 else state.combo = 1.0;
@@ -909,14 +1403,29 @@
 
             raycaster.setFromCamera(new THREE.Vector2((clientX/window.innerWidth)*2-1, -(clientY/window.innerHeight)*2+1), camera);
             if(!isAuto && anomaly && anomaly.active && raycaster.intersectObject(anomaly.mesh).length > 0) {
-                anomaly.active = false; scene.remove(anomaly.mesh); anomaly = null;
-                if(Math.random() < 0.2) { 
+                anomaly.active = false; scene.remove(anomaly.mesh); 
+                state.stats.anomalies++;
+                
+                if (anomaly.type === 'convergence') {
+                    state.activeBuffs.convergence = now + 15000;
+                    playCrit(); triggerShake();
+                    createLabel(clientX, clientY, "PARALLEL CONVERGENCE!", "#f43f5e", true);
+                } else if (anomaly.type === 'frenzy') {
+                    state.stats.frenzies++;
+                    state.activeBuffs.frenzy = now + 30000;
+                    playCrit(); triggerShake();
+                    createLabel(clientX, clientY, "GEOMETRIC FRENZY!", "#f59e0b", true);
+                } else if (anomaly.type === 'overdrive') {
                     state.overdriveUntil = now + 15000; 
-                    const ov = document.getElementById('overdrive-vignette');
-                    if(ov) { ov.classList.add('overdrive-active'); setTimeout(() => ov.classList.remove('overdrive-active'), 15000); }
-                    playCrit(); 
-                } 
-                else { addAether(Math.max(calculatePassiveRate() * 60, 1000)); playAscend(); }
+                    playCrit(); triggerShake();
+                    createLabel(clientX, clientY, "OVERDRIVE!", "#facc15", true);
+                } else {
+                    const burst = Math.max(calculatePassiveRate() * 60 * (1 + (state.metaSkills.anomalyPow.lv * 0.5)), 1000);
+                    addAether(burst); 
+                    playAscend(); triggerShake();
+                    createLabel(clientX, clientY, `+${fNum(burst)} AETHER`, "#38bdf8", true);
+                }
+                anomaly = null;
                 return;
             }
 
@@ -925,21 +1434,34 @@
                 let voidMult = 1 + state.metaSkills.clickPow.lv;
                 let ritMult = 1; Object.keys(state.rituals).forEach(k => { if (state.rituals[k].type === 'cascade' && Date.now()/1000 < state.rituals[k].activeUntil) ritMult *= state.rituals[k].power; });
                 let artMult = 1; Object.keys(state.artifacts).forEach(k => { if(state.artifacts[k].owned) artMult *= state.artifacts[k].mult; });
+                const theoremMult = 1 + (getTotalTheorems() * getTheoremPower());
+                const challengeMult = 1 + (state.completedConstraints.length * 0.5);
+                const convergenceMult = state.activeBuffs.convergence > now ? 100 : 1;
+                const singMult = 1 + (state.singularityUpgrades.echo.lv * 10.0);
                 
-                let val = state.clickPower * voidMult * state.combo * ritMult * state.prestige * artMult;
+                let val = state.clickPower * voidMult * state.combo * ritMult * state.prestige * artMult * theoremMult * challengeMult * convergenceMult * singMult;
                 if(isCrit) val *= 10;
                 addAether(val);
                 
                 if(!isAuto) {
-                    isCrit ? playCrit() : playClick();
+                    if (isCrit) { playCrit(); triggerShake(); } else { playClick(); }
                     window.monolithPhysics.velocity += 0.15; if (window.monolithPhysics.velocity > 0.3) window.monolithPhysics.velocity = 0.3;
                     const countEl = document.getElementById('aether-count'); 
                     if(countEl) { countEl.style.transform = 'scale(1.08)'; setTimeout(() => countEl.style.transform = 'scale(1)', 50); }
-                    const label = document.createElement('div'); label.className = isCrit ? 'click-text crit-text' : 'click-text'; label.style.left = clientX + 'px'; label.style.top = clientY + 'px'; label.style.color = isCrit ? '#facc15' : '#' + dimensions[state.dimIndex].color.toString(16); label.innerText = isCrit ? `CRIT! +${fNum(val)}` : `+${fNum(val)}`; document.body.appendChild(label); setTimeout(() => label.remove(), 1000);
-                    const cp = document.getElementById('click-prompt');
-                    if(cp) cp.style.opacity = '0';
+                    createLabel(clientX, clientY, isCrit ? `CRIT! +${fNum(val)}` : `+${fNum(val)}`, isCrit ? '#facc15' : '#' + dimensions[state.dimIndex].color.toString(16), isCrit);
                 }
             }
+        }
+        
+        function createLabel(x, y, text, color, isCrit) {
+            const label = document.createElement('div'); 
+            label.className = isCrit ? 'click-text crit-text' : 'click-text'; 
+            label.style.left = x + 'px'; 
+            label.style.top = y + 'px'; 
+            label.style.color = color; 
+            label.innerText = text; 
+            document.body.appendChild(label); 
+            setTimeout(() => label.remove(), 1000);
         }
 
         window.addEventListener('mousedown', e => handleInteraction(e.clientX, e.clientY));
@@ -963,12 +1485,19 @@
             let autoLv = 0; Object.keys(state.research).forEach(k => { if (state.research[k].type === 'auto') autoLv += state.research[k].lv; });
             if (autoLv > 0) for (let i = 0; i < autoLv * 2; i++) handleInteraction(window.innerWidth/2, window.innerHeight/2, true);
             
-            // Anomalies now have a 1.5% chance to spawn per second (down from 10%)
-            if(!anomaly && Math.random() < 0.015) {
-                const isRed = Math.random() < 0.1;
-                const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1), new THREE.MeshBasicMaterial({color: isRed ? 0xf43f5e : 0xfacc15, wireframe:true}));
+            // Evoling Anomalies Logic
+            const freqBuff = 1 + (state.metaSkills.anomalyFreq.lv * 0.20);
+            if(!anomaly && Math.random() < (0.015 * freqBuff)) {
+                const roll = Math.random();
+                let aType = 'burst'; let aColor = 0x38bdf8;
+                
+                if (roll < 0.15) { aType = 'convergence'; aColor = 0xf43f5e; } // 15% Red
+                else if (roll < 0.40) { aType = 'frenzy'; aColor = 0xf59e0b; } // 25% Orange
+                else if (roll < 0.50) { aType = 'overdrive'; aColor = 0xfacc15; } // 10% Yellow Overdrive
+                
+                const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1), new THREE.MeshBasicMaterial({color: aColor, wireframe:true}));
                 mesh.position.set((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*10); scene.add(mesh);
-                anomaly = { mesh, active: true }; setTimeout(() => { if(anomaly) { scene.remove(anomaly.mesh); anomaly = null; } }, 8000);
+                anomaly = { mesh, active: true, type: aType }; setTimeout(() => { if(anomaly) { scene.remove(anomaly.mesh); anomaly = null; } }, 8000);
             }
             updateUI(); window.checkVertexDialogues();
         }, 1000);
